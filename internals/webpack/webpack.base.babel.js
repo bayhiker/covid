@@ -5,14 +5,20 @@
 const path = require('path');
 const webpack = require('webpack');
 
+const BUILD_FOLDER_PATH = process.env.BUILD_FOLDER_PATH || 'build';
+const PUBLIC_PATH = process.env.PUBLIC_PATH || '/';
+
 module.exports = options => ({
   mode: options.mode,
   entry: options.entry,
   output: Object.assign(
     {
       // Compile into js/build.js
-      path: path.resolve(process.cwd(), 'build'),
-      publicPath: '/',
+      // Updated to allow building into sub-folder per
+      // https://github.com/react-boilerplate/react-boilerplate/blob/master/docs/general/deployment.md
+      // #deploying-in-a-subfolder-of-an-existing-server
+      path: path.resolve(process.cwd(), BUILD_FOLDER_PATH),
+      publicPath: PUBLIC_PATH,
     },
     options.output,
   ), // Merge with env dependent settings
@@ -113,6 +119,7 @@ module.exports = options => ({
     // drop any unreachable code.
     new webpack.EnvironmentPlugin({
       NODE_ENV: 'development',
+      PUBLIC_PATH: '/',
     }),
   ]),
   resolve: {
