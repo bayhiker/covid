@@ -30,7 +30,7 @@ export default function App() {
     <div>
       <AppWrapper>
         <Switch>
-          <Route exact path="/" component={HomePage} />
+          <Route exact path="/covid" component={HomePage} />
           <Route component={NotFoundPage} />
         </Switch>
         <GlobalStyle />
