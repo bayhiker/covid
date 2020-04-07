@@ -19,7 +19,7 @@ import { scaleQuantize } from 'd3-scale';
 import { geoCentroid } from 'd3';
 import ReactTooltip from 'react-tooltip';
 
-import states from './states.json';
+import states from '../../utils/data/states.json';
 
 const geoCountiesUrl =
   'https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json';

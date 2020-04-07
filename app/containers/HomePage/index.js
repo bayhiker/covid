@@ -10,6 +10,7 @@ import { connect } from 'react-redux';
 import { createStructuredSelector } from 'reselect';
 import { compose } from 'redux';
 
+import { Grid } from '@material-ui/core';
 import { useInjectSaga } from 'utils/injectSaga';
 import { useInjectReducer } from 'utils/injectReducer';
 import { Helmet } from 'react-helmet';
@@ -35,6 +36,7 @@ import {
 import { clearStateDialog } from '../../utils/dialogState';
 import CovidMap from '../../components/CovidMap';
 import CovidPlot from '../../components/CovidPlot';
+import CovidTable from '../../components/CovidTable';
 
 const key = 'homePage';
 
@@ -63,6 +65,7 @@ export function HomePage({
   };
 
   const youQuizTopBarProps = {
+    data,
     searchWith,
     colorMapBy,
     colorMapPerCapita,
@@ -81,8 +84,6 @@ export function HomePage({
   const covidPlotProps = {
     data,
     perCapita: colorMapPerCapita,
-    timeSeriesConfirmed: {},
-    timeSeriesDeaths: {},
   };
 
   React.useEffect(() => {
@@ -102,8 +103,16 @@ export function HomePage({
       <div>
         <CenteredSection>
           <YouQuizTopBar {...youQuizTopBarProps} />
-          <CovidMap {...covidMapProps} />
-          <CovidPlot {...covidPlotProps} />
+          <Grid container spacing={3}>
+            <Grid item xs={3} />
+            <Grid item xs={6}>
+              <CovidMap {...covidMapProps} />
+            </Grid>
+            <Grid item xs={3} />
+            <Grid item xs={12}>
+              <CovidPlot {...covidPlotProps} />
+            </Grid>
+          </Grid>
         </CenteredSection>
         <StateDialog {...stateDialogProps} />
       </div>

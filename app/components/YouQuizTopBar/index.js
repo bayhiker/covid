@@ -6,7 +6,6 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import TextField from '@material-ui/core/TextField';
 import { fade, makeStyles } from '@material-ui/core/styles';
 import {
   Toolbar,
@@ -21,11 +20,18 @@ import {
   FormControlLabel,
   Switch,
 } from '@material-ui/core';
-import { AccountCircle } from '@material-ui/icons';
+import { AccountCircle, Favorite, MergeTypeOutlined } from '@material-ui/icons';
 import MoreIcon from '@material-ui/icons/MoreVert';
-import Form from './Form';
+import CovidTable from '../CovidTable';
+import CovidThanks from '../CovidThanks';
 
 const useStyles = makeStyles(theme => ({
+  appBar: {
+    background: '#b3e5fc',
+  },
+  blackText: {
+    color: 'black',
+  },
   formControl: {
     margin: theme.spacing(1),
     minWidth: 120,
@@ -43,6 +49,7 @@ const useStyles = makeStyles(theme => ({
     marginRight: theme.spacing(2),
   },
   title: {
+    color: 'black',
     display: 'none',
     [theme.breakpoints.up('sm')]: {
       display: 'block',
@@ -101,6 +108,7 @@ const useStyles = makeStyles(theme => ({
 
 function YouQuizTopBar(props) {
   const {
+    data,
     searchWith,
     colorMapBy,
     colorMapPerCapita,
@@ -113,7 +121,6 @@ function YouQuizTopBar(props) {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState(null);
 
-  const isMenuOpen = Boolean(anchorEl);
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
 
   const handleProfileMenuOpen = event => {
@@ -124,29 +131,9 @@ function YouQuizTopBar(props) {
     setMobileMoreAnchorEl(null);
   };
 
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-    handleMobileMenuClose();
-  };
-
   const handleMobileMenuOpen = event => {
     setMobileMoreAnchorEl(event.currentTarget);
   };
-
-  const menuId = 'primary-search-account-menu';
-  const renderMenu = (
-    <Menu
-      anchorEl={anchorEl}
-      anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-      id={menuId}
-      keepMounted
-      transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-      open={isMenuOpen}
-      onClose={handleMenuClose}
-    >
-      <MenuItem onClick={handleMenuClose}>Guest</MenuItem>
-    </Menu>
-  );
 
   const mobileMenuId = 'primary-search-account-menu-mobile';
   const renderMobileMenu = (
@@ -173,9 +160,13 @@ function YouQuizTopBar(props) {
     </Menu>
   );
 
+  const covidTableProps = {
+    data,
+  };
+
   return (
     <div className={classes.grow}>
-      <AppBar position="static">
+      <AppBar position="static" className={classes.appBar}>
         <Toolbar className={classes.toolbar}>
           <Typography className={classes.title} variant="h6" noWrap>
             COVID-19
@@ -202,34 +193,24 @@ function YouQuizTopBar(props) {
             control={
               <Switch color="secondary" onChange={onChangeColorMapPerCapita} />
             }
-            label="Per Capita"
+            classes={classes.perCapitaSwitch}
+            label={
+              <Typography className={classes.blackText}>Per Capita</Typography>
+            }
             labelPlacement="start"
           />
           <div className={classes.grow} />
           <div>
-            <Form>
-              <label htmlFor="problemsFilter">
-                <TextField
-                  id="search"
-                  label="Search"
-                  type="search"
-                  value={searchWith}
-                  onChange={onChangeSearchWith}
-                />
-              </label>
-            </Form>
+            <CovidTable {...covidTableProps}>
+              <Typography className={classes.blackText}>Data Table</Typography>
+            </CovidTable>
           </div>
           <div>
-            <IconButton
-              edge="end"
-              aria-label="account of current user"
-              aria-controls={menuId}
-              aria-haspopup="true"
-              onClick={handleProfileMenuOpen}
-              color="inherit"
-            >
-              <AccountCircle />
-            </IconButton>
+            <CovidThanks>
+              <IconButton color="secondary">
+                <Favorite />
+              </IconButton>
+            </CovidThanks>
           </div>
           <div className={classes.sectionMobile}>
             <IconButton
@@ -245,7 +226,6 @@ function YouQuizTopBar(props) {
         </Toolbar>
       </AppBar>
       {renderMobileMenu}
-      {renderMenu}
     </div>
   );
 }
@@ -254,6 +234,7 @@ YouQuizTopBar.propTypes = {
   searchWith: PropTypes.string,
   colorMapBy: PropTypes.oneOf(['confirmed', 'deaths']),
   colorMapPerCapita: PropTypes.bool,
+  data: PropTypes.any,
   onChangeSearchWith: PropTypes.func,
   onChangeColorMapBy: PropTypes.func,
   onChangeColorMapPerCapita: PropTypes.func,
