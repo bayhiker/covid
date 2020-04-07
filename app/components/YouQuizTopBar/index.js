@@ -19,8 +19,11 @@ import {
   Select,
   FormControlLabel,
   Switch,
+  FormLabel,
+  RadioGroup,
+  Radio,
 } from '@material-ui/core';
-import { AccountCircle, Favorite, MergeTypeOutlined } from '@material-ui/icons';
+import { AccountCircle, Favorite } from '@material-ui/icons';
 import MoreIcon from '@material-ui/icons/MoreVert';
 import CovidTable from '../CovidTable';
 import CovidThanks from '../CovidThanks';
@@ -172,20 +175,32 @@ function YouQuizTopBar(props) {
             COVID-19
           </Typography>
           <div className={classes.grow} />
-          <FormControl required>
-            <InputLabel htmlFor="age-native-required">Color Map By</InputLabel>
-            <Select
-              native
-              value={colorMapBy}
-              onChange={onChangeColorMapBy}
+          <FormControl component="fieldset">
+            <FormLabel component="legend">Color Map By</FormLabel>
+            <RadioGroup
+              row
+              aria-label="position"
               name="colorMapBy"
-              inputProps={{
-                id: 'color-map-by-native-required',
-              }}
+              defaultValue="confirmed"
+              onChange={onChangeColorMapBy}
             >
-              <option value="deaths">Deaths</option>
-              <option value="confirmed">Confirmed</option>
-            </Select>
+              <FormControlLabel
+                value="confirmed"
+                control={<Radio color="primary" />}
+                label={
+                  <Typography className={classes.blackText}>
+                    Confirmed
+                  </Typography>
+                }
+              />
+              <FormControlLabel
+                value="deaths"
+                control={<Radio color="primary" />}
+                label={
+                  <Typography className={classes.blackText}>Deaths</Typography>
+                }
+              />
+            </RadioGroup>
           </FormControl>
           <div className={classes.grow} />
           <FormControlLabel
@@ -199,6 +214,8 @@ function YouQuizTopBar(props) {
             }
             labelPlacement="start"
           />
+          <div className={classes.grow} />
+          <div className={classes.grow} />
           <div className={classes.grow} />
           <div>
             <CovidTable {...covidTableProps}>

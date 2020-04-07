@@ -99,10 +99,10 @@ function CovidMap({ data, searchWith, colorMapBy, colorMapPerCapita }) {
             <>
               {geographies.map(geo => {
                 let cases = 0;
+                const currentDate = data.most_recent_date;
                 const fipsFormatted = `${geo.id}`.padStart(2, '0');
-                if (data && data.most_recent_date) {
-                  cases =
-                    data[colorMapBy][data.most_recent_date][fipsFormatted];
+                if (data && currentDate) {
+                  cases = data[colorMapBy][currentDate][fipsFormatted];
                   if (colorMapPerCapita) {
                     cases = (cases / population[fipsFormatted]) * 1000000000;
                   }
@@ -117,15 +117,14 @@ function CovidMap({ data, searchWith, colorMapBy, colorMapPerCapita }) {
                     onMouseEnter={() => {
                       const pop = population[fipsFormatted];
                       const confirmed =
-                        data.confirmed[data.most_recent_date][fipsFormatted];
+                        data.confirmed[currentDate][fipsFormatted];
                       const confirmedPerM = Math.ceil(
                         (confirmed / pop) * 1000000,
                       );
-                      const deaths =
-                        data.deaths[data.most_recent_date][fipsFormatted];
+                      const deaths = data.deaths[currentDate][fipsFormatted];
                       const deathsPerM = Math.ceil((deaths / pop) * 1000000);
                       setTooltipContent(
-                        `${states[geo.id].name}<br>
+                        `${states[geo.id].name} (${currentDate})<br>
                         Deaths: ${deaths} (${deathsPerM}/M)}<br>
                         Confirmed: ${confirmed} (${confirmedPerM}/M)<br>
                         Population: ${pop.toLocaleString()}`,

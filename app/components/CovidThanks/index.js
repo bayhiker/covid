@@ -11,7 +11,6 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  Typography,
   Divider,
 } from '@material-ui/core';
 import PropTypes from 'prop-types';
@@ -38,20 +37,8 @@ function CovidThanks({ children }) {
           <LocalHospital />
         </ListItemIcon>
         <ListItemText
-          primary="All Medical Personnels."
-          secondary={
-            <React.Fragment>
-              <Typography
-                component="span"
-                variant="body2"
-                className={classes.inline}
-                color="textPrimary"
-              >
-                Doctors, nurses, pharmasists, assistants, aids, ...
-              </Typography>
-              {' Thanks for for keeping us safe!'}
-            </React.Fragment>
-          }
+          primary="Medical Personnels."
+          secondary={<React.Fragment>And all COVID-19 helpers!</React.Fragment>}
         />
       </ListItem>
       <Divider variant="inset" component="li" />
@@ -61,19 +48,7 @@ function CovidThanks({ children }) {
         </ListItemIcon>
         <ListItemText
           primary="John Hopkins University"
-          secondary={
-            <React.Fragment>
-              <Typography
-                component="span"
-                variant="body2"
-                className={classes.inline}
-                color="textPrimary"
-              >
-                Whiting School of Engineering
-              </Typography>
-              {' Thanks for collecting and publishing detailed COVID-19 data'}
-            </React.Fragment>
-          }
+          secondary={<React.Fragment>And all data publishers</React.Fragment>}
         />
       </ListItem>
       <Divider variant="inset" component="li" />
@@ -82,20 +57,8 @@ function CovidThanks({ children }) {
           <GitHub />
         </ListItemIcon>
         <ListItemText
-          primary="GitHub"
-          secondary={
-            <React.Fragment>
-              <Typography
-                component="span"
-                variant="body2"
-                className={classes.inline}
-                color="textPrimary"
-              >
-                Community
-              </Typography>
-              {' A great force for good.'}
-            </React.Fragment>
-          }
+          primary="GitHub Community"
+          secondary={<React.Fragment>A great force for good.</React.Fragment>}
         />
       </ListItem>
       <Divider variant="inset" component="li" />

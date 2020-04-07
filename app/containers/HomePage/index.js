@@ -36,7 +36,6 @@ import {
 import { clearStateDialog } from '../../utils/dialogState';
 import CovidMap from '../../components/CovidMap';
 import CovidPlot from '../../components/CovidPlot';
-import CovidTable from '../../components/CovidTable';
 
 const key = 'homePage';
 
