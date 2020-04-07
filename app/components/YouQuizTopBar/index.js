@@ -15,15 +15,14 @@ import {
   Menu,
   MenuItem,
   FormControl,
-  InputLabel,
-  Select,
   FormControlLabel,
   Switch,
   FormLabel,
   RadioGroup,
   Radio,
+  Tooltip,
 } from '@material-ui/core';
-import { AccountCircle, Favorite } from '@material-ui/icons';
+import { AccountCircle, Favorite, Storage } from '@material-ui/icons';
 import MoreIcon from '@material-ui/icons/MoreVert';
 import CovidTable from '../CovidTable';
 import CovidThanks from '../CovidThanks';
@@ -138,6 +137,45 @@ function YouQuizTopBar(props) {
     setMobileMoreAnchorEl(event.currentTarget);
   };
 
+  const colorMapByRadioGroup = (
+    <FormControl component="fieldset">
+      <FormLabel component="legend">Color Map By</FormLabel>
+      <RadioGroup
+        row
+        aria-label="position"
+        name="colorMapBy"
+        value={colorMapBy}
+        defaultValue="confirmed"
+        onChange={onChangeColorMapBy}
+      >
+        <FormControlLabel
+          value="confirmed"
+          control={<Radio color="primary" />}
+          label={
+            <Typography className={classes.blackText}>Confirmed</Typography>
+          }
+        />
+        <FormControlLabel
+          value="deaths"
+          control={<Radio color="primary" />}
+          label={<Typography className={classes.blackText}>Deaths</Typography>}
+        />
+      </RadioGroup>
+    </FormControl>
+  );
+  const colorMapPerCapitaSwitch = (
+    <FormControlLabel
+      value="per-capita"
+      control={
+        <Switch color="secondary" onChange={onChangeColorMapPerCapita} />
+      }
+      checked={colorMapPerCapita}
+      classes={classes.perCapitaSwitch}
+      label={<Typography className={classes.blackText}>Per Capita</Typography>}
+      labelPlacement="start"
+    />
+  );
+
   const mobileMenuId = 'primary-search-account-menu-mobile';
   const renderMobileMenu = (
     <Menu
@@ -149,17 +187,8 @@ function YouQuizTopBar(props) {
       open={isMobileMenuOpen}
       onClose={handleMobileMenuClose}
     >
-      <MenuItem onClick={handleProfileMenuOpen}>
-        <IconButton
-          aria-label="account of current user"
-          aria-controls="primary-search-account-menu"
-          aria-haspopup="true"
-          color="inherit"
-        >
-          <AccountCircle />
-        </IconButton>
-        <p>Profile</p>
-      </MenuItem>
+      <MenuItem>{colorMapByRadioGroup}</MenuItem>
+      <MenuItem>{colorMapPerCapitaSwitch}</MenuItem>
     </Menu>
   );
 
@@ -175,58 +204,28 @@ function YouQuizTopBar(props) {
             COVID-19
           </Typography>
           <div className={classes.grow} />
-          <FormControl component="fieldset">
-            <FormLabel component="legend">Color Map By</FormLabel>
-            <RadioGroup
-              row
-              aria-label="position"
-              name="colorMapBy"
-              defaultValue="confirmed"
-              onChange={onChangeColorMapBy}
-            >
-              <FormControlLabel
-                value="confirmed"
-                control={<Radio color="primary" />}
-                label={
-                  <Typography className={classes.blackText}>
-                    Confirmed
-                  </Typography>
-                }
-              />
-              <FormControlLabel
-                value="deaths"
-                control={<Radio color="primary" />}
-                label={
-                  <Typography className={classes.blackText}>Deaths</Typography>
-                }
-              />
-            </RadioGroup>
-          </FormControl>
-          <div className={classes.grow} />
-          <FormControlLabel
-            value="per-capita"
-            control={
-              <Switch color="secondary" onChange={onChangeColorMapPerCapita} />
-            }
-            classes={classes.perCapitaSwitch}
-            label={
-              <Typography className={classes.blackText}>Per Capita</Typography>
-            }
-            labelPlacement="start"
-          />
-          <div className={classes.grow} />
-          <div className={classes.grow} />
+          <div className={classes.sectionDesktop}>
+            {colorMapByRadioGroup}
+            <div className={classes.grow} />
+            {colorMapPerCapitaSwitch}
+          </div>
           <div className={classes.grow} />
           <div>
             <CovidTable {...covidTableProps}>
-              <Typography className={classes.blackText}>Data Table</Typography>
+              <Tooltip title="Data Table">
+                <IconButton>
+                  <Storage />
+                </IconButton>
+              </Tooltip>
             </CovidTable>
           </div>
           <div>
             <CovidThanks>
-              <IconButton color="secondary">
-                <Favorite />
-              </IconButton>
+              <Tooltip title="Thanks">
+                <IconButton color="secondary">
+                  <Favorite />
+                </IconButton>
+              </Tooltip>
             </CovidThanks>
           </div>
           <div className={classes.sectionMobile}>

@@ -14,6 +14,7 @@ import {
   YAxis,
   Tooltip,
   Legend,
+  ResponsiveContainer,
 } from 'recharts';
 import {
   titleToDate,
@@ -52,17 +53,19 @@ function CovidPlot({ data, perCapita }) {
   extractDataToPlot(data, perCapita, dataToPlot);
   return (
     <div>
-      <LineChart width={1024} height={400} data={dataToPlot}>
-        <Line type="monotone" dataKey="confirmed" stroke="#00F" />
-        <Line type="monotone" dataKey="deaths" stroke="#000" />
-        <Line type="monotone" dataKey="new deaths" stroke="#F00" />
-        <Line type="monotone" dataKey="new confirmed" stroke="#0F0" />
-        <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
-        <XAxis dataKey="name" />
-        <YAxis />
-        <Tooltip />
-        <Legend layout="horizontal" verticalAlign="top" align="center" />
-      </LineChart>
+      <ResponsiveContainer width="100%" aspect={2.0 / 1.0} minWidth={200}>
+        <LineChart data={dataToPlot}>
+          <Line type="monotone" dataKey="confirmed" stroke="#00F" />
+          <Line type="monotone" dataKey="deaths" stroke="#000" />
+          <Line type="monotone" dataKey="new deaths" stroke="#F00" />
+          <Line type="monotone" dataKey="new confirmed" stroke="#0F0" />
+          <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
+          <XAxis dataKey="name" />
+          <YAxis />
+          <Tooltip />
+          <Legend layout="horizontal" verticalAlign="top" align="center" />
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   );
 }
