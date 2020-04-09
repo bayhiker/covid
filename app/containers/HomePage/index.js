@@ -9,6 +9,7 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { createStructuredSelector } from 'reselect';
 import { compose } from 'redux';
+import { useLocation } from 'react-router-dom';
 
 import { Grid } from '@material-ui/core';
 import { useInjectSaga } from 'utils/injectSaga';
@@ -19,6 +20,7 @@ import saga from './saga';
 import StateDialog from '../../components/StateDialog';
 import { CenteredSection } from '../../utils/styledUtil';
 import YouQuizTopBar from '../../components/YouQuizTopBar';
+import { stateFips } from '../../utils/mapUtils';
 
 import {
   makeSelectHomeLoading,
@@ -38,7 +40,6 @@ import {
 import { clearStateDialog } from '../../utils/dialogState';
 import CovidMap from '../../components/CovidMap';
 import CovidPlot from '../../components/CovidPlot';
-import { zoom } from 'd3';
 
 const key = 'homePage';
 
@@ -57,8 +58,34 @@ export function HomePage({
   onUpdateZoomState,
 }) {
   const [data, setData] = React.useState({});
+  const location = useLocation();
   useInjectReducer({ key, reducer });
   useInjectSaga({ key, saga });
+
+  React.useEffect(() => {
+    processLocation();
+    loadData();
+  }, [zoomState.dataUrl]);
+
+  const processLocation = () => {
+    // TODO load data from web service
+    const { pathname } = location;
+    const [, country, state, county] = pathname.split('/');
+    console.log(`Process location: ${country}, ${state}, ${county}`);
+    let [zoom, geoId] = [1, '0'];
+    if (country === 'us') {
+      console.log('Country is us');
+      if (state) {
+        const fips = stateFips[state.toUpperCase()];
+        console.log(`State is ${state}, fips is ${fips}`);
+        if (fips) {
+          zoom = 2;
+          geoId = fips;
+        }
+      }
+      updateZoomState({ zoom, geoId });
+    }
+  };
 
   const loadData = () => {
     try {
@@ -103,10 +130,6 @@ export function HomePage({
     zoomState,
     perCapita: colorMapPerCapita,
   };
-
-  React.useEffect(() => {
-    loadData();
-  }, [zoomState.dataUrl]);
 
   return (
     <article>

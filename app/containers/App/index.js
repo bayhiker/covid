@@ -11,7 +11,6 @@ import React from 'react';
 import { Switch, Route } from 'react-router-dom';
 import styled from 'styled-components';
 
-import NotFoundPage from 'containers/NotFoundPage/Loadable';
 import HomePage from 'containers/HomePage/Loadable';
 
 import GlobalStyle from '../../global-styles';
@@ -30,8 +29,7 @@ export default function App() {
     <div>
       <AppWrapper>
         <Switch>
-          <Route exact path="/" component={HomePage} />
-          <Route component={NotFoundPage} />
+          <Route component={HomePage} />
         </Switch>
         <GlobalStyle />
       </AppWrapper>

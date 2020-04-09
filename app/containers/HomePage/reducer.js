@@ -99,11 +99,9 @@ const homePageReducer = (state = initialState, action) =>
         break;
       case UPDATE_ZOOM_STATE:
         updateZoomState(draft, action.zoomState);
-        /*
         console.log(
           `zoomState updated to ${JSON.stringify(draft.userData.zoomState)}`,
         );
-        */
         break;
     }
   });

@@ -17,6 +17,7 @@ import ReactTooltip from 'react-tooltip';
 import { stateAbbreviations, zoomLevelIsCountry } from '../../utils/mapUtils';
 import { CenteredSection } from '../../utils/styledUtil';
 import { Typography } from '@material-ui/core';
+import { updateZoomState } from '../../containers/HomePage/actions';
 
 const colorScale = scaleQuantize()
   .domain([1, 10])
@@ -133,13 +134,21 @@ function CovidMap({
           subject={centroid}
           dx={stateOffsets[stateAbbreviation][0]}
           dy={stateOffsets[stateAbbreviation][1]}
+          onClick={() => {
+            handleMapClick(geo);
+          }}
         >
           <text x={4} fontSize={14} alignmentBaseline="middle">
             {`${stateAbbreviation}(${suffix})`}
           </text>
         </Annotation>
       ) : (
-        <Marker coordinates={centroid}>
+        <Marker
+          coordinates={centroid}
+          onClick={() => {
+            handleMapClick(geo);
+          }}
+        >
           <text y="2" fontSize={14} textAnchor="middle">
             {`${stateAbbreviation}(${suffix})`}
           </text>
@@ -180,9 +189,6 @@ function CovidMap({
         fill={colorScale(cases !== undefined ? getScale(cases) : '#EEE')}
         onMouseEnter={() => {
           setTooltipContent(getTooltipContent(geo));
-          onUpdateZoomState({
-            geoId: fipsFormatted,
-          });
         }}
         onMouseLeave={() => {
           setTooltipContent('');
@@ -227,12 +233,18 @@ function CovidMap({
   };
 
   const handleMapClick = geo => {
-    onUpdateZoomState({
-      // Do NOT zoom out if already zoomed in to county level
-      zoom: zoomState.zoom < 2 ? 2 : zoomState.zoom,
-      center: geoCentroid(geo),
+    const newZoomState = {
       geoId: geo.id,
-    });
+    };
+    if (zoomState.zoom < 2) {
+      // Do NOT zoom out if already zoomed in to county level
+      newZoomState.zoom = 2;
+      newZoomState.center = geoCentroid(geo);
+    } else if (zoomState.zoom < 8) {
+      newZoomState.zoom = 8;
+      newZoomState.center = geoCentroid(geo);
+    }
+    onUpdateZoomState(newZoomState);
   };
 
   const formatGeoId = geoId => {
