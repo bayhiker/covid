@@ -7,15 +7,21 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import MaterialTable from 'material-table';
-import states from '../../utils/data/states.json';
+import { zoomLevelIsCountry } from '../../utils/mapUtils';
 import { prevDateTitle } from '../../utils/dateUtils';
 import YouQuizPopover from '../YouQuizPopover';
 
-function CovidTable({ children, data }) {
+function CovidTable({ children, data, zoomState }) {
+  const countryLevel = zoomLevelIsCountry(zoomState);
+  console.log(
+    `countryLevel is ${countryLevel}, zoomState is ${JSON.stringify(
+      zoomState,
+    )}`,
+  );
   const columns = [
     {
-      title: 'State',
-      field: 'state',
+      title: countryLevel ? 'State' : 'County',
+      field: 'name',
       editable: 'never',
       cellStyle: { whiteSpace: 'nowrap' },
     },
@@ -51,12 +57,13 @@ function CovidTable({ children, data }) {
       customSort: (a, b) => a.population - b.population,
     },
   ];
+
   const tableData = [];
   if (data && data.most_recent_date) {
-    const { confirmed, deaths, population } = data;
+    const { confirmed, deaths, population, names } = data;
     const mostRecentDate = data.most_recent_date;
     const yesterday = prevDateTitle(mostRecentDate);
-    Object.keys(states).forEach(key => {
+    Object.keys(names).forEach(key => {
       if (
         !(key in confirmed[mostRecentDate] && key in deaths[mostRecentDate])
       ) {
@@ -65,7 +72,7 @@ function CovidTable({ children, data }) {
       const confirmedTotal = confirmed[mostRecentDate][key];
       const deathsTotal = deaths[mostRecentDate][key];
       tableData.push({
-        state: states[key].name,
+        name: names[key],
         confirmed: confirmedTotal,
         deaths: deathsTotal,
         confirmed_daily:
@@ -103,6 +110,7 @@ function CovidTable({ children, data }) {
 CovidTable.propTypes = {
   children: PropTypes.any,
   data: PropTypes.any,
+  zoomState: PropTypes.any,
 };
 
 export default CovidTable;

@@ -22,7 +22,7 @@ import {
   Radio,
   Tooltip,
 } from '@material-ui/core';
-import { AccountCircle, Favorite, Storage } from '@material-ui/icons';
+import { Favorite, Storage } from '@material-ui/icons';
 import MoreIcon from '@material-ui/icons/MoreVert';
 import CovidTable from '../CovidTable';
 import CovidThanks from '../CovidThanks';
@@ -111,6 +111,7 @@ const useStyles = makeStyles(theme => ({
 function YouQuizTopBar(props) {
   const {
     data,
+    zoomState,
     searchWith,
     colorMapBy,
     colorMapPerCapita,
@@ -120,14 +121,9 @@ function YouQuizTopBar(props) {
   } = props;
   const classes = useStyles();
 
-  const [anchorEl, setAnchorEl] = React.useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState(null);
 
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
-
-  const handleProfileMenuOpen = event => {
-    setAnchorEl(event.currentTarget);
-  };
 
   const handleMobileMenuClose = () => {
     setMobileMoreAnchorEl(null);
@@ -194,6 +190,7 @@ function YouQuizTopBar(props) {
 
   const covidTableProps = {
     data,
+    zoomState,
   };
 
   return (
@@ -251,6 +248,7 @@ YouQuizTopBar.propTypes = {
   colorMapBy: PropTypes.oneOf(['confirmed', 'deaths']),
   colorMapPerCapita: PropTypes.bool,
   data: PropTypes.any,
+  zoomState: PropTypes.any,
   onChangeSearchWith: PropTypes.func,
   onChangeColorMapBy: PropTypes.func,
   onChangeColorMapPerCapita: PropTypes.func,

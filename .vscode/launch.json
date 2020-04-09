@@ -5,6 +5,14 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "type": "firefox",
+      "request": "launch",
+      "reAttach": true,
+      "name": "Launch localhost",
+      "url": "http://mike-prodesk:3000",
+      "webRoot": "${workspaceFolder}"
+    },
+    {
       "type": "node",
       "name": "vscode-jest-tests",
       "request": "launch",

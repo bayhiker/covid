@@ -27,15 +27,18 @@ import {
   makeSelectHomeSearchWith,
   makeSelectHomeColorMapBy,
   makeSelectHomeColorMapPerCapita,
+  makeSelectHomeZoomState,
 } from './selectors';
 import {
   changeSearchWith,
   changeColorMapBy,
   changeColorMapPerCapita,
+  updateZoomState,
 } from './actions';
 import { clearStateDialog } from '../../utils/dialogState';
 import CovidMap from '../../components/CovidMap';
 import CovidPlot from '../../components/CovidPlot';
+import { zoom } from 'd3';
 
 const key = 'homePage';
 
@@ -46,16 +49,29 @@ export function HomePage({
   searchWith,
   colorMapBy,
   colorMapPerCapita,
+  zoomState,
   onClickDialogOk,
   onChangeSearchWith,
   onChangeColorMapBy,
   onChangeColorMapPerCapita,
+  onUpdateZoomState,
 }) {
+  const [data, setData] = React.useState({});
   useInjectReducer({ key, reducer });
   useInjectSaga({ key, saga });
 
-  const [data, setData] = React.useState({});
-
+  const loadData = () => {
+    console.log(`Loading ${zoomState.dataUrl}`);
+    try {
+      fetch(zoomState.dataUrl)
+        .then(response => response.json())
+        .then(d => {
+          setData(d);
+        });
+    } catch (error) {
+      // TODO Show alert here
+    }
+  };
   const stateDialogProps = {
     loading,
     successMessage,
@@ -65,6 +81,7 @@ export function HomePage({
 
   const youQuizTopBarProps = {
     data,
+    zoomState,
     searchWith,
     colorMapBy,
     colorMapPerCapita,
@@ -75,23 +92,22 @@ export function HomePage({
 
   const covidMapProps = {
     data,
+    zoomState,
     searchWith,
     colorMapBy,
     colorMapPerCapita,
+    onUpdateZoomState,
   };
 
   const covidPlotProps = {
     data,
+    zoomState,
     perCapita: colorMapPerCapita,
   };
 
   React.useEffect(() => {
-    // eslint-disable-next-line global-require
-    const d = require('../../data/us/0.json');
-    // eslint-disable-next-line global-require
-    // const d = require('./data.json');
-    setData(d);
-  }, []);
+    loadData();
+  }, [zoomState.dataUrl]);
 
   return (
     <article>
@@ -126,10 +142,12 @@ HomePage.propTypes = {
   searchWith: PropTypes.string,
   colorMapBy: PropTypes.oneOf(['confirmed', 'deaths']),
   colorMapPerCapita: PropTypes.bool,
+  zoomState: PropTypes.any,
   onClickDialogOk: PropTypes.func,
   onChangeSearchWith: PropTypes.func,
   onChangeColorMapBy: PropTypes.func,
   onChangeColorMapPerCapita: PropTypes.func,
+  onUpdateZoomState: PropTypes.func,
 };
 
 const mapStateToProps = createStructuredSelector({
@@ -139,6 +157,7 @@ const mapStateToProps = createStructuredSelector({
   searchWith: makeSelectHomeSearchWith(),
   colorMapBy: makeSelectHomeColorMapBy(),
   colorMapPerCapita: makeSelectHomeColorMapPerCapita(),
+  zoomState: makeSelectHomeZoomState(),
 });
 
 function mapDispatchToProps(dispatch) {
@@ -154,6 +173,9 @@ function mapDispatchToProps(dispatch) {
     },
     onChangeColorMapPerCapita: evt => {
       dispatch(changeColorMapPerCapita(evt.target.checked));
+    },
+    onUpdateZoomState: zoomState => {
+      dispatch(updateZoomState(zoomState));
     },
   };
 }

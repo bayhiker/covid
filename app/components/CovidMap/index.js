@@ -1,9 +1,3 @@
-/**
- *
- * CovidMap
- *
- */
-
 import React from 'react';
 import PropTypes from 'prop-types';
 // import styled from 'styled-components';
@@ -14,16 +8,13 @@ import {
   Geography,
   Marker,
   Annotation,
+  ZoomableGroup,
 } from 'react-simple-maps';
 import { scaleQuantize } from 'd3-scale';
 import { geoCentroid } from 'd3';
 import ReactTooltip from 'react-tooltip';
 
-import states from '../../utils/data/states.json';
-
-const geoCountiesUrl =
-  'https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json';
-const geoStatesUrl = 'https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json';
+import { stateAbbreviations, zoomLevelIsCountry } from '../../utils/mapUtils';
 
 const colorScale = scaleQuantize()
   .domain([1, 10])
@@ -39,7 +30,7 @@ const colorScale = scaleQuantize()
     '#782618',
   ]);
 
-const offsets = {
+const stateOffsets = {
   VT: [50, -8],
   NH: [34, 2],
   MA: [30, -1],
@@ -51,13 +42,21 @@ const offsets = {
   DC: [49, 21],
 };
 
-function CovidMap({ data, searchWith, colorMapBy, colorMapPerCapita }) {
+function CovidMap({
+  data,
+  zoomState,
+  searchWith,
+  colorMapBy,
+  colorMapPerCapita,
+  onUpdateZoomState,
+}) {
   const [tooltipContent, setTooltipContent] = React.useState('');
+  const currentDate = data.most_recent_date;
+  const { population, names } = data;
   let logCasesSpan = 24;
   let minLogCases = 0;
   let logPerCapitaSpan = 24;
   let minLogPerCapita = 0;
-  let population = {};
 
   React.useEffect(() => {
     recalculateBounds();
@@ -67,8 +66,6 @@ function CovidMap({ data, searchWith, colorMapBy, colorMapPerCapita }) {
     if (!data || !data[colorMapBy]) {
       return;
     }
-    // eslint-disable-next-line prefer-destructuring
-    population = data.population;
     const { minCases, maxCases, minPerCapita, maxPerCapita } = data[colorMapBy][
       data.most_recent_date
     ];
@@ -88,87 +85,177 @@ function CovidMap({ data, searchWith, colorMapBy, colorMapPerCapita }) {
     return Math.floor(((Math.log2(cases) - lowerBound) / logSpan) * 10);
   };
 
+  const haveDataForGeo = geo => {
+    if (zoomLevelIsCountry(zoomState)) {
+      return true;
+    }
+    const currentLoadedGeo = zoomState.geoId;
+    if (currentLoadedGeo === undefined || !geo || !geo.id) {
+      return false;
+    }
+    return (
+      geo.id === currentLoadedGeo ||
+      geo.id.substring(0, 2) === currentLoadedGeo.substring(0, 2)
+    );
+  };
+
+  const getStateMarkerAnnotation = geo => {
+    if (!names || !population || !haveDataForGeo(geo)) {
+      return false;
+    }
+    const centroid = geoCentroid(geo);
+    const geoName = names[geo.id];
+    const stateAbbreviation = stateAbbreviations[geo.id];
+    const getGeoMarkerOrAnnotation = () =>
+      geoName &&
+      stateAbbreviation &&
+      centroid[0] > -160 &&
+      centroid[0] < -67 &&
+      (stateAbbreviation in stateOffsets ? (
+        <Annotation
+          subject={centroid}
+          dx={stateOffsets[stateAbbreviation][0]}
+          dy={stateOffsets[stateAbbreviation][1]}
+        >
+          <text x={4} fontSize={14} alignmentBaseline="middle">
+            {stateAbbreviation}
+          </text>
+        </Annotation>
+      ) : (
+        <Marker coordinates={centroid}>
+          <text y="2" fontSize={14} textAnchor="middle">
+            {stateAbbreviation}
+          </text>
+        </Marker>
+      ));
+
+    return (
+      <g
+        key={`${geo.rsmKey}-name`}
+        onMouseEnter={() => {
+          setTooltipContent(getTooltipContent(geo));
+        }}
+        onMouseLeave={() => {
+          setTooltipContent('');
+        }}
+      >
+        {zoomState.zoom > 2 ? '' : getGeoMarkerOrAnnotation(geo)}
+      </g>
+    );
+  };
+
+  const getStateOrCountyGeography = geo => {
+    if (!names || !population || !haveDataForGeo(geo)) {
+      return false;
+    }
+    let cases = 0;
+    const fipsFormatted = formatGeoId(geo.id);
+    if (data && currentDate) {
+      cases = data[colorMapBy][currentDate][fipsFormatted];
+      if (colorMapPerCapita) {
+        cases = (cases / population[fipsFormatted]) * 1000000000;
+      }
+    }
+    return (
+      <Geography
+        key={geo.rsmKey}
+        geography={geo}
+        fill={colorScale(cases !== undefined ? getScale(cases) : '#EEE')}
+        onMouseEnter={() => {
+          setTooltipContent(getTooltipContent(geo));
+          onUpdateZoomState({
+            geoId: fipsFormatted,
+          });
+        }}
+        onMouseLeave={() => {
+          setTooltipContent('');
+        }}
+        onClick={() => {
+          handleMapClick(geo);
+        }}
+        style={{
+          default: {
+            stroke: '#607D8B',
+            strokeWidth: 0.25,
+            outline: 'none',
+          },
+          hover: {
+            stroke: '#607D8B',
+            strokeWidth: 0.5,
+            outline: 'none',
+          },
+          pressed: {
+            stroke: '#607D8B',
+            strokeWidth: 0.5,
+            outline: 'none',
+          },
+        }}
+      />
+    );
+  };
+
+  const getTooltipContent = geo => {
+    const fipsFormatted = formatGeoId(geo.id);
+    const geoName = names[fipsFormatted];
+    const pop = population[fipsFormatted];
+    const confirmed = data.confirmed[currentDate][fipsFormatted];
+    const confirmedPerM = Math.ceil((confirmed / pop) * 1000000);
+    const deaths = data.deaths[currentDate][fipsFormatted];
+    const deathsPerM = Math.ceil((deaths / pop) * 1000000);
+    return `${geoName} (${currentDate})<br>
+    Deaths: ${deaths} (${deathsPerM}/M)}<br>
+    Confirmed: ${confirmed}
+    (${confirmedPerM}/M)<br>
+    Population: ${pop.toLocaleString()}`;
+  };
+
+  const handleMapClick = geo => {
+    onUpdateZoomState({
+      // Do NOT zoom out if already zoomed in to county level
+      zoom: zoomState.zoom < 2 ? 2 : zoomState.zoom,
+      center: geoCentroid(geo),
+      geoId: geo.id,
+    });
+  };
+
+  const formatGeoId = geoId => {
+    if (geoId === undefined) {
+      return '0';
+    }
+    if (geoId.length <= 2) {
+      return `${geoId}`.padStart(2, '0');
+    }
+    if (geoId.length <= 5) {
+      return `${geoId}`.padStart(5, '0');
+    }
+    // We really shouldn't be here. If we are here, something was wrong
+    return geoId;
+  };
+
   recalculateBounds(data);
 
   return (
-    <>
+    <div>
       <ReactTooltip html>{tooltipContent}</ReactTooltip>
       <ComposableMap data-tip="" projection="geoAlbersUsa">
-        <Geographies geography={geoStatesUrl}>
-          {({ geographies }) => (
-            <>
-              {geographies.map(geo => {
-                let cases = 0;
-                const currentDate = data.most_recent_date;
-                const fipsFormatted = `${geo.id}`.padStart(2, '0');
-                if (data && currentDate) {
-                  cases = data[colorMapBy][currentDate][fipsFormatted];
-                  if (colorMapPerCapita) {
-                    cases = (cases / population[fipsFormatted]) * 1000000000;
-                  }
-                }
-                return (
-                  <Geography
-                    key={geo.rsmKey}
-                    geography={geo}
-                    fill={colorScale(
-                      cases !== undefined ? getScale(cases) : '#EEE',
-                    )}
-                    onMouseEnter={() => {
-                      const pop = population[fipsFormatted];
-                      const confirmed =
-                        data.confirmed[currentDate][fipsFormatted];
-                      const confirmedPerM = Math.ceil(
-                        (confirmed / pop) * 1000000,
-                      );
-                      const deaths = data.deaths[currentDate][fipsFormatted];
-                      const deathsPerM = Math.ceil((deaths / pop) * 1000000);
-                      setTooltipContent(
-                        `${states[geo.id].name} (${currentDate})<br>
-                        Deaths: ${deaths} (${deathsPerM}/M)}<br>
-                        Confirmed: ${confirmed} (${confirmedPerM}/M)<br>
-                        Population: ${pop.toLocaleString()}`,
-                      );
-                    }}
-                    onMouseLeave={() => {
-                      setTooltipContent('');
-                    }}
-                  />
-                );
-              })}
-              {geographies.map(geo => {
-                const centroid = geoCentroid(geo);
-                const cur = states[geo.id];
-                return (
-                  <g key={`${geo.rsmKey}-name`}>
-                    {cur &&
-                      centroid[0] > -160 &&
-                      centroid[0] < -67 &&
-                      (Object.keys(offsets).indexOf(cur.abbreviation) === -1 ? (
-                        <Marker coordinates={centroid}>
-                          <text y="2" fontSize={14} textAnchor="middle">
-                            {cur.abbreviation}
-                          </text>
-                        </Marker>
-                      ) : (
-                        <Annotation
-                          subject={centroid}
-                          dx={offsets[cur.abbreviation][0]}
-                          dy={offsets[cur.abbreviation][1]}
-                        >
-                          <text x={4} fontSize={14} alignmentBaseline="middle">
-                            {cur.abbreviation}
-                          </text>
-                        </Annotation>
-                      ))}
-                  </g>
-                );
-              })}
-            </>
-          )}
-        </Geographies>
+        <ZoomableGroup
+          zoom={zoomState.zoom}
+          center={zoomState.center}
+          onMoveEnd={evt => {
+            onUpdateZoomState({ zoom: evt.zoom, center: evt.coordinates });
+          }}
+        >
+          <Geographies geography={zoomState.geoJsonUrl}>
+            {({ geographies }) => (
+              <>
+                {geographies.map(geo => getStateOrCountyGeography(geo))}
+                {geographies.map(geo => getStateMarkerAnnotation(geo))}
+              </>
+            )}
+          </Geographies>
+        </ZoomableGroup>
       </ComposableMap>
-    </>
+    </div>
   );
 }
 
@@ -177,6 +264,8 @@ CovidMap.propTypes = {
   searchWith: PropTypes.string,
   colorMapBy: PropTypes.oneOf(['confirmed', 'deaths']),
   colorMapPerCapita: PropTypes.bool,
+  zoomState: PropTypes.any,
+  onUpdateZoomState: PropTypes.func,
 };
 
 export default CovidMap;

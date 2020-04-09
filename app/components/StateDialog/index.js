@@ -65,8 +65,8 @@ function StateDialog({
 
 StateDialog.propTypes = {
   loading: PropTypes.bool,
-  successMessage: PropTypes.oneOfType([PropTypes.object, PropTypes.bool]),
-  errorMessage: PropTypes.oneOfType([PropTypes.object, PropTypes.bool]),
+  successMessage: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
+  errorMessage: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
   onClickDialogOk: PropTypes.func,
 };
 

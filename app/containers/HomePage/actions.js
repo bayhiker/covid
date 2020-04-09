@@ -20,6 +20,8 @@ import {
   CHANGE_SEARCH_WITH,
   CHANGE_COLOR_MAP_BY,
   CHANGE_COLOR_MAP_PER_CAPITA,
+  UPDATE_ZOOM_STATE,
+  LOAD_DATA,
 } from './constants';
 
 export function defaultAction() {
@@ -46,5 +48,15 @@ export function changeColorMapPerCapita(colorMapPerCapita) {
   return {
     type: CHANGE_COLOR_MAP_PER_CAPITA,
     colorMapPerCapita,
+  };
+}
+
+/**
+ * @param {*} zoomState: {level:x, center: [lat,lng], geoId:z}
+ */
+export function updateZoomState(zoomState) {
+  return {
+    type: UPDATE_ZOOM_STATE,
+    zoomState,
   };
 }
