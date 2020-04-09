@@ -21,13 +21,18 @@ import {
   RadioGroup,
   Radio,
   Tooltip,
+  Paper,
+  Link,
 } from '@material-ui/core';
 import { Favorite, Storage } from '@material-ui/icons';
 import MoreIcon from '@material-ui/icons/MoreVert';
+import ForumIcon from '@material-ui/icons/Forum';
+
 import CovidTable from '../CovidTable';
 import CovidThanks from '../CovidThanks';
 
 const useStyles = makeStyles(theme => ({
+  toolbar: theme.mixins.toolbar,
   appBar: {
     background: '#b3e5fc',
   },
@@ -43,9 +48,6 @@ const useStyles = makeStyles(theme => ({
   },
   grow: {
     flexGrow: 1,
-  },
-  toolbar: {
-    width: '100%',
   },
   menuButton: {
     marginRight: theme.spacing(2),
@@ -195,8 +197,8 @@ function YouQuizTopBar(props) {
 
   return (
     <div className={classes.grow}>
-      <AppBar position="static" className={classes.appBar}>
-        <Toolbar className={classes.toolbar}>
+      <AppBar position="fixed" className={classes.appBar}>
+        <Toolbar>
           <Typography className={classes.title} variant="h6" noWrap>
             COVID-19
           </Typography>
@@ -215,6 +217,17 @@ function YouQuizTopBar(props) {
                 </IconButton>
               </Tooltip>
             </CovidTable>
+          </div>
+          <div>
+            <Link
+              href="https://youquiz.me/community"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <IconButton>
+                <ForumIcon />
+              </IconButton>
+            </Link>
           </div>
           <div>
             <CovidThanks>
@@ -238,6 +251,9 @@ function YouQuizTopBar(props) {
           </div>
         </Toolbar>
       </AppBar>
+      <Paper>
+        <div className={classes.toolbar} />
+      </Paper>
       {renderMobileMenu}
     </div>
   );

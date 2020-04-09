@@ -38,7 +38,7 @@ function CovidThanks({ children }) {
         </ListItemIcon>
         <ListItemText
           primary="Medical Personnels."
-          secondary={<React.Fragment>And all COVID-19 helpers!</React.Fragment>}
+          secondary={<React.Fragment>and all COVID-19 helpers!</React.Fragment>}
         />
       </ListItem>
       <Divider variant="inset" component="li" />
@@ -48,7 +48,7 @@ function CovidThanks({ children }) {
         </ListItemIcon>
         <ListItemText
           primary="John Hopkins University"
-          secondary={<React.Fragment>And all data publishers</React.Fragment>}
+          secondary={<React.Fragment>and all data publishers</React.Fragment>}
         />
       </ListItem>
       <Divider variant="inset" component="li" />
@@ -58,7 +58,7 @@ function CovidThanks({ children }) {
         </ListItemIcon>
         <ListItemText
           primary="GitHub Community"
-          secondary={<React.Fragment>A great force for good.</React.Fragment>}
+          secondary={<React.Fragment>a great force for good.</React.Fragment>}
         />
       </ListItem>
       <Divider variant="inset" component="li" />
