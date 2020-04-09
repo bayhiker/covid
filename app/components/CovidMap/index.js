@@ -15,6 +15,8 @@ import { geoCentroid } from 'd3';
 import ReactTooltip from 'react-tooltip';
 
 import { stateAbbreviations, zoomLevelIsCountry } from '../../utils/mapUtils';
+import { CenteredSection } from '../../utils/styledUtil';
+import { Typography } from '@material-ui/core';
 
 const colorScale = scaleQuantize()
   .domain([1, 10])
@@ -51,6 +53,7 @@ function CovidMap({
   onUpdateZoomState,
 }) {
   const [tooltipContent, setTooltipContent] = React.useState('');
+  let caption = '';
   const currentDate = data.most_recent_date;
   const { population, names } = data;
   let logCasesSpan = 24;
@@ -103,9 +106,23 @@ function CovidMap({
     if (!names || !population || !haveDataForGeo(geo)) {
       return false;
     }
+    const fipsFormatted = formatGeoId(geo.id);
+    const geoName = names[fipsFormatted];
+    const pop = population[fipsFormatted];
+    const confirmed = data.confirmed[currentDate][fipsFormatted];
+    const confirmedPerM = Math.ceil((confirmed / pop) * 1000000);
+    const deaths = data.deaths[currentDate][fipsFormatted];
+    const deathsPerM = Math.ceil((deaths / pop) * 1000000);
     const centroid = geoCentroid(geo);
-    const geoName = names[geo.id];
     const stateAbbreviation = stateAbbreviations[geo.id];
+    let suffix = '';
+    if (colorMapPerCapita) {
+      suffix = `${colorMapBy === 'confirmed' ? confirmedPerM : deathsPerM}`;
+    } else {
+      suffix = `${
+        colorMapBy === 'confirmed' ? Math.ceil(confirmed / 1000) : deaths
+      }`;
+    }
     const getGeoMarkerOrAnnotation = () =>
       geoName &&
       stateAbbreviation &&
@@ -118,13 +135,13 @@ function CovidMap({
           dy={stateOffsets[stateAbbreviation][1]}
         >
           <text x={4} fontSize={14} alignmentBaseline="middle">
-            {stateAbbreviation}
+            {`${stateAbbreviation}(${suffix})`}
           </text>
         </Annotation>
       ) : (
         <Marker coordinates={centroid}>
           <text y="2" fontSize={14} textAnchor="middle">
-            {stateAbbreviation}
+            {`${stateAbbreviation}(${suffix})`}
           </text>
         </Marker>
       ));
@@ -234,27 +251,40 @@ function CovidMap({
 
   recalculateBounds(data);
 
+  if (zoomLevelIsCountry(zoomState)) {
+    if (colorMapPerCapita) {
+      caption = 'Per Million';
+    } else if (colorMapBy === 'confirmed') {
+      caption = 'In Thousands';
+    }
+  } else {
+    caption = '';
+  }
+
   return (
     <div>
-      <ReactTooltip html>{tooltipContent}</ReactTooltip>
-      <ComposableMap data-tip="" projection="geoAlbersUsa">
-        <ZoomableGroup
-          zoom={zoomState.zoom}
-          center={zoomState.center}
-          onMoveEnd={evt => {
-            onUpdateZoomState({ zoom: evt.zoom, center: evt.coordinates });
-          }}
-        >
-          <Geographies geography={zoomState.geoJsonUrl}>
-            {({ geographies }) => (
-              <>
-                {geographies.map(geo => getStateOrCountyGeography(geo))}
-                {geographies.map(geo => getStateMarkerAnnotation(geo))}
-              </>
-            )}
-          </Geographies>
-        </ZoomableGroup>
-      </ComposableMap>
+      <CenteredSection>
+        <ReactTooltip html>{tooltipContent}</ReactTooltip>
+        <Typography variant="h4">{caption}</Typography>
+        <ComposableMap data-tip="" projection="geoAlbersUsa">
+          <ZoomableGroup
+            zoom={zoomState.zoom}
+            center={zoomState.center}
+            onMoveEnd={evt => {
+              onUpdateZoomState({ zoom: evt.zoom, center: evt.coordinates });
+            }}
+          >
+            <Geographies geography={zoomState.geoJsonUrl}>
+              {({ geographies }) => (
+                <>
+                  {geographies.map(geo => getStateOrCountyGeography(geo))}
+                  {geographies.map(geo => getStateMarkerAnnotation(geo))}
+                </>
+              )}
+            </Geographies>
+          </ZoomableGroup>
+        </ComposableMap>
+      </CenteredSection>
     </div>
   );
 }

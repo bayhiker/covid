@@ -66,7 +66,6 @@ function updateZoomState(draft, zoomState) {
     dataUrl = `${DATA_URL_PREFIX}/${geoIdState}.json`;
   }
   draft.userData.zoomState.dataUrl = dataUrl;
-  console.log(`Setting dataUrl to ${draft.userData.zoomState.dataUrl}`);
 }
 
 /* eslint-disable default-case, no-param-reassign */
@@ -100,9 +99,11 @@ const homePageReducer = (state = initialState, action) =>
         break;
       case UPDATE_ZOOM_STATE:
         updateZoomState(draft, action.zoomState);
+        /*
         console.log(
           `zoomState updated to ${JSON.stringify(draft.userData.zoomState)}`,
         );
+        */
         break;
     }
   });

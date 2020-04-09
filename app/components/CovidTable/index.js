@@ -13,11 +13,6 @@ import YouQuizPopover from '../YouQuizPopover';
 
 function CovidTable({ children, data, zoomState }) {
   const countryLevel = zoomLevelIsCountry(zoomState);
-  console.log(
-    `countryLevel is ${countryLevel}, zoomState is ${JSON.stringify(
-      zoomState,
-    )}`,
-  );
   const columns = [
     {
       title: countryLevel ? 'State' : 'County',

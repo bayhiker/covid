@@ -61,7 +61,6 @@ export function HomePage({
   useInjectSaga({ key, saga });
 
   const loadData = () => {
-    console.log(`Loading ${zoomState.dataUrl}`);
     try {
       fetch(zoomState.dataUrl)
         .then(response => response.json())
