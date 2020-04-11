@@ -42,9 +42,7 @@ function downloadFile(response, toFilename) {
   if (response.status === 204 || response.status === 205) {
     return null;
   }
-  return response.blob().then(blob => {
-    return fileDownload(blob, toFilename);
-  });
+  return response.blob().then(blob => fileDownload(blob, toFilename));
 }
 
 /**
@@ -62,9 +60,7 @@ export function download(url, options) {
   }
   return fetch(url, options)
     .then(checkStatus)
-    .then(response => {
-      return downloadFile(response, toFilename);
-    });
+    .then(response => downloadFile(response, toFilename));
 }
 
 /**

@@ -20,7 +20,7 @@ import saga from './saga';
 import StateDialog from '../../components/StateDialog';
 import { CenteredSection } from '../../utils/styledUtil';
 import YouQuizTopBar from '../../components/YouQuizTopBar';
-import { stateFips } from '../../utils/mapUtils';
+import { stateFips, usStates } from '../../utils/mapUtils';
 
 import {
   makeSelectHomeLoading,
@@ -62,29 +62,50 @@ export function HomePage({
   useInjectReducer({ key, reducer });
   useInjectSaga({ key, saga });
 
+  // 268689 is phone number code of the word county
+  const zoomWithCountyHashPrefix = 2.0268689;
+
   React.useEffect(() => {
     processLocation();
+  }, []);
+
+  React.useEffect(() => {
     loadData();
   }, [zoomState.dataUrl]);
 
   const processLocation = () => {
-    // TODO load data from web service
     const { pathname } = location;
     const [, country, state, county] = pathname.split('/');
-    console.log(`Process location: ${country}, ${state}, ${county}`);
-    let [zoom, geoId] = [1, '0'];
-    if (country === 'us') {
-      console.log('Country is us');
-      if (state) {
+    if (country && country.toUpperCase() === 'US') {
+      const newZoomState = { zoom: 1, geoId: '0' };
+      if (state && state.length === 2) {
         const fips = stateFips[state.toUpperCase()];
-        console.log(`State is ${state}, fips is ${fips}`);
-        if (fips) {
-          zoom = 2;
-          geoId = fips;
+        if (fips in usStates) {
+          newZoomState.zoom = 2;
+          newZoomState.geoId = fips;
+          if (county && county.length >= 3) {
+            // Shortest county name is Lee county, length 3
+            newZoomState.zoom = getZoomWithCountyHash(county);
+          }
         }
+        newZoomState.center = [
+          usStates[newZoomState.geoId].lon,
+          usStates[newZoomState.geoId].lat,
+        ];
       }
-      updateZoomState({ zoom, geoId });
+      onUpdateZoomState(newZoomState);
     }
+  };
+
+  const getZoomWithCountyHash = countyName => {
+    // Get a code that uniquely identifies a county within a state
+    // All chars multiplied together, mod 9999999 along the way
+    let countyHash = 1;
+    for (let i = 0; i < countyName.length; i += 1) {
+      countyHash =
+        (countyHash * countyName.toLowerCase().charCodeAt(i)) % 9999999;
+    }
+    return zoomWithCountyHashPrefix + countyHash / 10 ** 14;
   };
 
   const loadData = () => {
@@ -93,11 +114,35 @@ export function HomePage({
         .then(response => response.json())
         .then(d => {
           setData(d);
+          checkForCountyHash(d);
         });
     } catch (error) {
       // TODO Show alert here
     }
   };
+
+  const checkForCountyHash = d => {
+    // Check for county information encoded in a zoom a tiny bit larger than zoomWithCountyHashPrefix
+    // For example, 2.00268689xxxx mean a county with index xxxx
+    if (
+      zoomState.zoom < zoomWithCountyHashPrefix ||
+      zoomState.zoom > zoomWithCountyHashPrefix + 10 ** -7
+    ) {
+      return;
+    }
+    const zoomWithCountyHashTimesTen = Math.floor(zoomState.zoom * 10 ** 15);
+    if (zoomWithCountyHashTimesTen % 10 !== 0) {
+      return;
+    }
+    // Now we are resonably sure this is a zoom embedded with a county hash
+    const countyHash = (zoomWithCountyHashTimesTen / 10) % 10 ** 7;
+    if (!(`${countyHash}` in d.hashes)) {
+      return;
+    }
+    const countyFips = d.hashes[countyHash];
+    onUpdateZoomState({ zoom: 8, geoId: countyFips });
+  };
+
   const stateDialogProps = {
     loading,
     successMessage,

@@ -21,7 +21,6 @@ import {
   CHANGE_COLOR_MAP_BY,
   CHANGE_COLOR_MAP_PER_CAPITA,
   UPDATE_ZOOM_STATE,
-  LOAD_DATA,
 } from './constants';
 
 export function defaultAction() {

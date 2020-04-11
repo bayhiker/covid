@@ -13,11 +13,10 @@ import {
 import { scaleQuantize } from 'd3-scale';
 import { geoCentroid } from 'd3';
 import ReactTooltip from 'react-tooltip';
-
-import { stateAbbreviations, zoomLevelIsCountry } from '../../utils/mapUtils';
-import { CenteredSection } from '../../utils/styledUtil';
 import { Typography } from '@material-ui/core';
-import { updateZoomState } from '../../containers/HomePage/actions';
+
+import { usStates, zoomLevelIsCountry } from '../../utils/mapUtils';
+import { CenteredSection } from '../../utils/styledUtil';
 
 const colorScale = scaleQuantize()
   .domain([1, 10])
@@ -104,7 +103,13 @@ function CovidMap({
   };
 
   const getStateMarkerAnnotation = geo => {
-    if (!names || !population || !haveDataForGeo(geo)) {
+    if (
+      !names ||
+      !population ||
+      !zoomLevelIsCountry(zoomState) ||
+      !haveDataForGeo(geo) ||
+      !(geo.id in usStates)
+    ) {
       return false;
     }
     const fipsFormatted = formatGeoId(geo.id);
@@ -115,7 +120,7 @@ function CovidMap({
     const deaths = data.deaths[currentDate][fipsFormatted];
     const deathsPerM = Math.ceil((deaths / pop) * 1000000);
     const centroid = geoCentroid(geo);
-    const stateAbbreviation = stateAbbreviations[geo.id];
+    const stateAbbreviation = usStates[geo.id].abbr;
     let suffix = '';
     if (colorMapPerCapita) {
       suffix = `${colorMapBy === 'confirmed' ? confirmedPerM : deathsPerM}`;

@@ -14,6 +14,7 @@ import {
   GEO_JSON_URL_COUNTIES,
   GEO_JSON_URL_STATES,
 } from './constants';
+import { config } from '../../constants';
 import {
   SUCCESS_ACTION,
   ERROR_ACTION,
@@ -22,8 +23,6 @@ import {
   resetDialogState,
   mergeUserData,
 } from '../../utils/dialogState';
-
-const DATA_URL_PREFIX = 'https://youquiz.me/data/covid/us';
 
 export const initialState = getDialogInitialState({
   searchWith: '',
@@ -40,7 +39,7 @@ export const initialState = getDialogInitialState({
     // '0' for the whole US, '06' for CA, '06085' for Santa Clara County
     geoId: '0',
     geoJsonUrl: 'https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json',
-    dataUrl: `${DATA_URL_PREFIX}/0.json`,
+    dataUrl: `${config.DATA_URL_PREFIX}/0.json`,
   },
 });
 
@@ -57,13 +56,13 @@ function updateZoomState(draft, zoomState) {
     draft.userData.zoomState.geoId = zoomState.geoId;
   }
   const { zoom, geoId } = draft.userData.zoomState;
-  let dataUrl = `${DATA_URL_PREFIX}/0.json`;
+  let dataUrl = `${config.DATA_URL_PREFIX}/0.json`;
   if (zoom >= 2) {
     let geoIdState = 20;
     if (geoId !== undefined || geoId !== '0') {
       geoIdState = geoId.substring(0, 2);
     }
-    dataUrl = `${DATA_URL_PREFIX}/${geoIdState}.json`;
+    dataUrl = `${config.DATA_URL_PREFIX}/${geoIdState}.json`;
   }
   draft.userData.zoomState.dataUrl = dataUrl;
 }
@@ -99,9 +98,11 @@ const homePageReducer = (state = initialState, action) =>
         break;
       case UPDATE_ZOOM_STATE:
         updateZoomState(draft, action.zoomState);
+        /*
         console.log(
           `zoomState updated to ${JSON.stringify(draft.userData.zoomState)}`,
         );
+        */
         break;
     }
   });

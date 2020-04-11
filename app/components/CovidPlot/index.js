@@ -25,7 +25,7 @@ import {
 import {
   zoomLevelIsCounty,
   zoomLevelIsState,
-  stateNames,
+  usStates,
 } from '../../utils/mapUtils';
 import { CenteredSection } from '../../utils/styledUtil';
 
@@ -46,7 +46,7 @@ function CovidPlot({ data, zoomState, perCapita }) {
     if (countyLevel) {
       caption = `${data.names[geoId]} County`;
     } else if (zoomLevelIsState(zoomState)) {
-      caption = stateNames[geoId.substring(0, 2)];
+      caption = usStates[geoId.substring(0, 2)].name;
     }
 
     const timeSeriesConfirmed = data.confirmed.time_series;
