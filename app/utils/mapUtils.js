@@ -262,3 +262,11 @@ export function zoomLevelIsState(zoomState) {
 export function zoomLevelIsCounty(zoomState) {
   return getZoomLevel(zoomState) === 'county';
 }
+
+export function geoIsState(geoId) {
+  return geoId && geoId.length === 2;
+}
+
+export function geoIsCounty(geoId) {
+  return geoId && geoId.length === 5;
+}

@@ -16,6 +16,7 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  Label,
 } from 'recharts';
 import {
   titleToDate,
@@ -51,6 +52,7 @@ function CovidPlot({ data, zoomState, perCapita }) {
 
     const timeSeriesConfirmed = data.confirmed.time_series;
     const timeSeriesDeaths = data.deaths.time_series;
+    const timeSeriesMobility = data.mobility.time_series;
     let prevTotalDeaths = 0;
     let prevTotalConfirmed = 0;
     for (let d = startDate; d <= endDate; d.setDate(d.getDate() + 1)) {
@@ -61,12 +63,16 @@ function CovidPlot({ data, zoomState, perCapita }) {
       const totalDeaths = countyLevel
         ? data.deaths[seriesKey][geoId]
         : timeSeriesDeaths[seriesKey];
+      const mobility = countyLevel
+        ? data.mobility[seriesKey][geoId]
+        : timeSeriesMobility[seriesKey];
       dataToPlot.push({
         name: dateToShortTitle(d),
         confirmed: totalConfirmed,
         deaths: totalDeaths,
         'new confirmed': totalConfirmed - prevTotalConfirmed,
         'new deaths': totalDeaths - prevTotalDeaths,
+        mobility,
       });
       prevTotalConfirmed = totalConfirmed;
       prevTotalDeaths = totalDeaths;
@@ -86,13 +92,53 @@ function CovidPlot({ data, zoomState, perCapita }) {
           minWidth={200}
         >
           <LineChart data={dataToPlot}>
-            <Line type="monotone" dataKey="confirmed" stroke="#00F" />
-            <Line type="monotone" dataKey="new confirmed" stroke="#0F0" />
-            <Line type="monotone" dataKey="deaths" stroke="#000" />
-            <Line type="monotone" dataKey="new deaths" stroke="#F00" />
+            <Line
+              yAxisId="left"
+              type="monotone"
+              dataKey="confirmed"
+              stroke="#00F"
+            />
+            <Line
+              yAxisId="left"
+              type="monotone"
+              dataKey="new confirmed"
+              stroke="#0F0"
+            />
+            <Line
+              yAxisId="left"
+              type="monotone"
+              dataKey="deaths"
+              stroke="#000"
+            />
+            <Line
+              yAxisId="left"
+              type="monotone"
+              dataKey="new deaths"
+              stroke="#F00"
+            />
+            <Line
+              yAxisId="right"
+              type="monotone"
+              dataKey="mobility"
+              stroke="#EE0"
+            />
             <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
             <XAxis dataKey="name" />
-            <YAxis />
+            <YAxis
+              yAxisId="left"
+              label={{
+                value: 'Cases',
+                position: 'insideBottomLeft',
+              }}
+            />
+            <YAxis
+              yAxisId="right"
+              orientation="right"
+              label={{
+                value: 'Mobility Index',
+                position: 'insideBottomRight',
+              }}
+            />
             <Tooltip />
             <Legend layout="horizontal" verticalAlign="top" align="center" />
           </LineChart>

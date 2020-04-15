@@ -15,7 +15,13 @@ import { geoCentroid } from 'd3';
 import ReactTooltip from 'react-tooltip';
 import { Typography } from '@material-ui/core';
 
-import { usStates, zoomLevelIsCountry } from '../../utils/mapUtils';
+import {
+  usStates,
+  zoomLevelIsCountry,
+  zoomLevelIsCounty,
+  geoIsCounty,
+  geoIsState,
+} from '../../utils/mapUtils';
 import { CenteredSection } from '../../utils/styledUtil';
 
 const colorScale = scaleQuantize()
@@ -102,60 +108,82 @@ function CovidMap({
     );
   };
 
+  const getGeoStats = (geo, date) => {
+    const stats = {};
+    stats.fipsFormatted = formatGeoId(geo.id);
+    stats.geoName = names[stats.fipsFormatted];
+    stats.population = population[stats.fipsFormatted];
+    stats.confirmed = data.confirmed[date][stats.fipsFormatted];
+    stats.confirmedPerM = Math.ceil(
+      (stats.confirmed / stats.population) * 10 ** 6,
+    );
+    stats.deaths = data.deaths[date][stats.fipsFormatted];
+    stats.deathsPerM = Math.ceil((stats.deaths / stats.population) * 10 ** 6);
+    stats.centroid = geoCentroid(geo);
+    return stats;
+  };
+
   const getStateMarkerAnnotation = geo => {
     if (
       !names ||
       !population ||
-      !zoomLevelIsCountry(zoomState) ||
-      !haveDataForGeo(geo) ||
-      !(geo.id in usStates)
+      !(zoomLevelIsCountry(zoomState) || zoomLevelIsCounty(zoomState)) ||
+      !haveDataForGeo(geo)
     ) {
       return false;
     }
-    const fipsFormatted = formatGeoId(geo.id);
-    const geoName = names[fipsFormatted];
-    const pop = population[fipsFormatted];
-    const confirmed = data.confirmed[currentDate][fipsFormatted];
-    const confirmedPerM = Math.ceil((confirmed / pop) * 1000000);
-    const deaths = data.deaths[currentDate][fipsFormatted];
-    const deathsPerM = Math.ceil((deaths / pop) * 1000000);
-    const centroid = geoCentroid(geo);
-    const stateAbbreviation = usStates[geo.id].abbr;
+    const geoStats = getGeoStats(geo, currentDate);
+    const isCounty = geoIsCounty(geo.id);
+    let geoAbbreviation = 'US';
+    if (isCounty) {
+      geoAbbreviation = names[geo.id];
+    } else if (geoIsState(geo.id)) {
+      if (geo.id in usStates) {
+        geoAbbreviation = usStates[geo.id].abbr;
+      }
+    }
+
     let suffix = '';
     if (colorMapPerCapita) {
-      suffix = `${colorMapBy === 'confirmed' ? confirmedPerM : deathsPerM}`;
+      suffix = `${
+        colorMapBy === 'confirmed'
+          ? geoStats.confirmedPerM
+          : geoStats.deathsPerM
+      }`;
     } else {
       suffix = `${
-        colorMapBy === 'confirmed' ? Math.ceil(confirmed / 1000) : deaths
+        colorMapBy === 'confirmed'
+          ? Math.ceil(geoStats.confirmed / 1000)
+          : geoStats.deaths
       }`;
     }
     const getGeoMarkerOrAnnotation = () =>
-      geoName &&
-      stateAbbreviation &&
-      centroid[0] > -160 &&
-      centroid[0] < -67 &&
-      (stateAbbreviation in stateOffsets ? (
+      geoStats.geoName &&
+      geoAbbreviation &&
+      geoStats.centroid[0] > -160 &&
+      geoStats.centroid[0] < -67 &&
+      (geoAbbreviation in stateOffsets ? (
         <Annotation
-          subject={centroid}
-          dx={stateOffsets[stateAbbreviation][0]}
-          dy={stateOffsets[stateAbbreviation][1]}
+          subject={geoStats.centroid}
+          dx={stateOffsets[geoAbbreviation][0]}
+          dy={stateOffsets[geoAbbreviation][1]}
           onClick={() => {
             handleMapClick(geo);
           }}
         >
           <text x={4} fontSize={14} alignmentBaseline="middle">
-            {`${stateAbbreviation}(${suffix})`}
+            {`${geoAbbreviation}(${suffix})`}
           </text>
         </Annotation>
       ) : (
         <Marker
-          coordinates={centroid}
+          coordinates={geoStats.centroid}
           onClick={() => {
             handleMapClick(geo);
           }}
         >
-          <text y="2" fontSize={14} textAnchor="middle">
-            {`${stateAbbreviation}(${suffix})`}
+          <text y="2" fontSize={isCounty ? 2 : 14} textAnchor="middle">
+            {`${geoAbbreviation}(${suffix})`}
           </text>
         </Marker>
       ));
@@ -170,7 +198,9 @@ function CovidMap({
           setTooltipContent('');
         }}
       >
-        {zoomState.zoom > 2 ? '' : getGeoMarkerOrAnnotation(geo)}
+        {zoomLevelIsCountry(zoomState) || zoomLevelIsCounty(zoomState)
+          ? getGeoMarkerOrAnnotation(geo)
+          : ''}
       </g>
     );
   };
@@ -184,7 +214,7 @@ function CovidMap({
     if (data && currentDate) {
       cases = data[colorMapBy][currentDate][fipsFormatted];
       if (colorMapPerCapita) {
-        cases = (cases / population[fipsFormatted]) * 1000000000;
+        cases = (cases / population[fipsFormatted]) * 10 ** 9;
       }
     }
     return (
@@ -223,18 +253,12 @@ function CovidMap({
   };
 
   const getTooltipContent = geo => {
-    const fipsFormatted = formatGeoId(geo.id);
-    const geoName = names[fipsFormatted];
-    const pop = population[fipsFormatted];
-    const confirmed = data.confirmed[currentDate][fipsFormatted];
-    const confirmedPerM = Math.ceil((confirmed / pop) * 1000000);
-    const deaths = data.deaths[currentDate][fipsFormatted];
-    const deathsPerM = Math.ceil((deaths / pop) * 1000000);
-    return `${geoName} (${currentDate})<br>
-    Deaths: ${deaths} (${deathsPerM}/M)}<br>
-    Confirmed: ${confirmed}
-    (${confirmedPerM}/M)<br>
-    Population: ${pop.toLocaleString()}`;
+    const geoStats = getGeoStats(geo, currentDate);
+    return `${geoStats.geoName} (${currentDate})<br>
+    Deaths: ${geoStats.deaths} (${geoStats.deathsPerM}/M)}<br>
+    Confirmed: ${geoStats.confirmed}
+    (${geoStats.confirmedPerM}/M)<br>
+    Population: ${geoStats.population.toLocaleString()}`;
   };
 
   const handleMapClick = geo => {
