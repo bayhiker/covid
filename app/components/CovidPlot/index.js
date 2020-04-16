@@ -16,7 +16,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  Label,
 } from 'recharts';
 import {
   titleToDate,
@@ -53,8 +52,11 @@ function CovidPlot({ data, zoomState, perCapita }) {
     const timeSeriesConfirmed = data.confirmed.time_series;
     const timeSeriesDeaths = data.deaths.time_series;
     const timeSeriesMobility = data.mobility.time_series;
+
     let prevTotalDeaths = 0;
     let prevTotalConfirmed = 0;
+    let prevMobility = -1;
+    let firstValidMobilityFound = false;
     for (let d = startDate; d <= endDate; d.setDate(d.getDate() + 1)) {
       const seriesKey = dateToTitle(d);
       const totalConfirmed = countyLevel
@@ -66,16 +68,28 @@ function CovidPlot({ data, zoomState, perCapita }) {
       const mobility = countyLevel
         ? data.mobility[seriesKey][geoId]
         : timeSeriesMobility[seriesKey];
-      dataToPlot.push({
+      const dataPoint = {
         name: dateToShortTitle(d),
         confirmed: totalConfirmed,
         deaths: totalDeaths,
         'new confirmed': totalConfirmed - prevTotalConfirmed,
         'new deaths': totalDeaths - prevTotalDeaths,
-        mobility,
-      });
+      };
+      if (
+        !firstValidMobilityFound &&
+        prevMobility !== -1 &&
+        prevMobility !== mobility
+      ) {
+        firstValidMobilityFound = true;
+      }
+
+      if (firstValidMobilityFound) {
+        dataPoint.mobility = mobility;
+      }
+      dataToPlot.push(dataPoint);
       prevTotalConfirmed = totalConfirmed;
       prevTotalDeaths = totalDeaths;
+      prevMobility = mobility;
     }
   };
 

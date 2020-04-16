@@ -150,12 +150,14 @@ function CovidMap({
           ? geoStats.confirmedPerM
           : geoStats.deathsPerM
       }`;
+    } else if (colorMapBy === 'confirmed') {
+      if (geoStats.confirmed >= 1000) {
+        suffix = `${Math.ceil(geoStats.confirmed / 1000)}K`;
+      } else {
+        suffix = `${geoStats.confirmed}`;
+      }
     } else {
-      suffix = `${
-        colorMapBy === 'confirmed'
-          ? Math.ceil(geoStats.confirmed / 1000)
-          : geoStats.deaths
-      }`;
+      suffix = `${geoStats.deaths}`;
     }
     const getGeoMarkerOrAnnotation = () =>
       geoStats.geoName &&
@@ -292,12 +294,8 @@ function CovidMap({
 
   recalculateBounds(data);
 
-  if (zoomLevelIsCountry(zoomState)) {
-    if (colorMapPerCapita) {
-      caption = 'Per Million';
-    } else if (colorMapBy === 'confirmed') {
-      caption = 'In Thousands';
-    }
+  if (zoomLevelIsCountry(zoomState) && colorMapPerCapita) {
+    caption = 'Per Million';
   } else {
     caption = '';
   }
