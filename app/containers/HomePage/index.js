@@ -186,12 +186,10 @@ export function HomePage({
         <CenteredSection>
           <YouQuizTopBar {...youQuizTopBarProps} />
           <Grid container spacing={3}>
-            <Grid item xs={3} />
-            <Grid item xs={6}>
+            <Grid item xs={12} md={4}>
               <CovidMap {...covidMapProps} />
             </Grid>
-            <Grid item xs={3} />
-            <Grid item xs={12}>
+            <Grid item xs={12} md={8}>
               <CovidPlot {...covidPlotProps} />
             </Grid>
           </Grid>
