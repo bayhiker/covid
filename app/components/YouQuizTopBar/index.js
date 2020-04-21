@@ -117,9 +117,11 @@ function YouQuizTopBar(props) {
     searchWith,
     colorMapBy,
     colorMapPerCapita,
+    colorMapNewCases,
     onChangeSearchWith,
     onChangeColorMapBy,
     onChangeColorMapPerCapita,
+    onChangeColorMapNewCases,
   } = props;
   const classes = useStyles();
 
@@ -173,6 +175,16 @@ function YouQuizTopBar(props) {
       labelPlacement="start"
     />
   );
+  const colorMapNewCasesSwitch = (
+    <FormControlLabel
+      value="new-cases"
+      control={<Switch color="secondary" onChange={onChangeColorMapNewCases} />}
+      checked={colorMapNewCases}
+      classes={classes.newCasesSwitch}
+      label={<Typography className={classes.blackText}>New Cases</Typography>}
+      labelPlacement="start"
+    />
+  );
 
   const mobileMenuId = 'primary-search-account-menu-mobile';
   const renderMobileMenu = (
@@ -186,6 +198,7 @@ function YouQuizTopBar(props) {
       onClose={handleMobileMenuClose}
     >
       <MenuItem>{colorMapByRadioGroup}</MenuItem>
+      <MenuItem>{colorMapNewCasesSwitch}</MenuItem>
       <MenuItem>{colorMapPerCapitaSwitch}</MenuItem>
     </Menu>
   );
@@ -206,6 +219,7 @@ function YouQuizTopBar(props) {
           <div className={classes.sectionDesktop}>
             {colorMapByRadioGroup}
             <div className={classes.grow} />
+            {colorMapNewCasesSwitch}
             {colorMapPerCapitaSwitch}
           </div>
           <div className={classes.grow} />
@@ -263,11 +277,13 @@ YouQuizTopBar.propTypes = {
   searchWith: PropTypes.string,
   colorMapBy: PropTypes.oneOf(['confirmed', 'deaths']),
   colorMapPerCapita: PropTypes.bool,
+  colorMapNewCases: PropTypes.bool,
   data: PropTypes.any,
   zoomState: PropTypes.any,
   onChangeSearchWith: PropTypes.func,
   onChangeColorMapBy: PropTypes.func,
   onChangeColorMapPerCapita: PropTypes.func,
+  onChangeColorMapNewCases: PropTypes.func,
 };
 
 export default YouQuizTopBar;

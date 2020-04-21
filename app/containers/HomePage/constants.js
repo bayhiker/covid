@@ -9,6 +9,8 @@ export const CHANGE_SEARCH_WITH = 'app/HomePage/CHANGE_PROBLEMS_FILTER';
 export const CHANGE_COLOR_MAP_BY = 'app/HomePage/CHANGE_COLOR_MAP_BY';
 export const CHANGE_COLOR_MAP_PER_CAPITA =
   'app/HomePage/CHANGE_COLOR_MAP_PER_CAPITA';
+export const CHANGE_COLOR_MAP_NEW_CASES =
+  'app/HomePage/CHANGE_COLOR_MAP_NEW_CASES';
 export const UPDATE_ZOOM_STATE = 'app/HomePage/UPDATE_ZOOM_STATE';
 
 export const GEO_JSON_URL_STATES =

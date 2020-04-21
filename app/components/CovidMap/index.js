@@ -1,5 +1,5 @@
 import React from 'react';
-import PropTypes from 'prop-types';
+import PropTypes, { object } from 'prop-types';
 // import styled from 'styled-components';
 
 import {
@@ -13,7 +13,7 @@ import {
 import { scaleQuantize } from 'd3-scale';
 import { geoCentroid } from 'd3';
 import ReactTooltip from 'react-tooltip';
-import { Typography } from '@material-ui/core';
+import { Typography, createStyles } from '@material-ui/core';
 
 import {
   usStates,
@@ -23,6 +23,7 @@ import {
   geoIsState,
 } from '../../utils/mapUtils';
 import { CenteredSection } from '../../utils/styledUtil';
+import { prevDateTitle } from '../../utils/dateUtils';
 
 const colorScale = scaleQuantize()
   .domain([1, 10])
@@ -50,15 +51,19 @@ const stateOffsets = {
   DC: [49, 21],
 };
 
+const defaultMinNewCases = 10000000;
+
 function CovidMap({
   data,
   zoomState,
   searchWith,
   colorMapBy,
   colorMapPerCapita,
+  colorMapNewCases,
   onUpdateZoomState,
 }) {
   const [tooltipContent, setTooltipContent] = React.useState('');
+  const [newCases, setNewCases] = React.useState({ confirmed: {}, deaths: {} }); // New cases on most recent date
   let caption = '';
   const currentDate = data.most_recent_date;
   const { population, names } = data;
@@ -66,13 +71,77 @@ function CovidMap({
   let minLogCases = 0;
   let logPerCapitaSpan = 24;
   let minLogPerCapita = 0;
+  const minNewCases = {
+    confirmed: defaultMinNewCases,
+    deaths: defaultMinNewCases,
+  };
+  const maxNewCases = { confirmed: -1, deaths: -1 };
+  const minNewCasesPerCapita = {
+    confirmed: defaultMinNewCases,
+    deaths: defaultMinNewCases,
+  };
+  const maxNewCasesPerCapita = { confirmed: -1, deaths: -1 };
+  let logNewCasesSpan = 24;
+  let minLogNewCases = 0;
+  let logNewCasesPerCapitaSpan = 24;
+  let minLogNewCasesPerCapita = 0;
 
   React.useEffect(() => {
+    recalculateNewCases();
     recalculateBounds();
   }, [data]);
 
+  const recalculateNewCases = () => {
+    const todayTitle = data.most_recent_date;
+    if (!todayTitle) {
+      return;
+    }
+    const updatedNewCases = { confirmed: {}, deaths: {} };
+    ['confirmed', 'deaths'].forEach(caseType => {
+      const dataToday = data[caseType][todayTitle];
+      const dataYesterday = data[caseType][prevDateTitle(todayTitle)];
+      Object.keys(dataToday).forEach(fips => {
+        if (!fips || !/^\d+$/.test(fips)) {
+          return;
+        }
+        const newCasesForFips = dataToday[fips] - dataYesterday[fips];
+        updatedNewCases[caseType][fips] = newCasesForFips;
+        const newCasesPerCapita =
+          (newCasesForFips / population[fips]) * 1000000;
+        if (
+          newCasesForFips < 0 ||
+          Number.isNaN(newCasesForFips) ||
+          !Number.isFinite(newCasesForFips) ||
+          newCasesPerCapita < 0 ||
+          Number.isNaN(newCasesPerCapita) ||
+          !Number.isFinite(newCasesPerCapita)
+        ) {
+          return;
+        }
+        if (newCasesForFips < minNewCases[caseType]) {
+          minNewCases[caseType] = newCasesForFips;
+        }
+        if (newCasesForFips > maxNewCases[caseType]) {
+          maxNewCases[caseType] = newCasesForFips;
+        }
+        if (newCasesPerCapita < minNewCasesPerCapita[caseType]) {
+          minNewCasesPerCapita[caseType] = newCasesPerCapita;
+        }
+        if (newCasesPerCapita > maxNewCasesPerCapita[caseType]) {
+          maxNewCasesPerCapita[caseType] = newCasesPerCapita;
+        }
+      });
+    });
+    setNewCases(updatedNewCases);
+  };
+
   const recalculateBounds = () => {
-    if (!data || !data[colorMapBy]) {
+    if (
+      !data ||
+      !data[colorMapBy] ||
+      minNewCases[colorMapBy] > 1000000 ||
+      maxNewCases[colorMapBy] < 0
+    ) {
       return;
     }
     const { minCases, maxCases, minPerCapita, maxPerCapita } = data[colorMapBy][
@@ -83,15 +152,38 @@ function CovidMap({
     minLogPerCapita = minPerCapita === 0 ? 0 : Math.log2(minPerCapita);
     logPerCapitaSpan =
       (maxPerCapita === 0 ? 0 : Math.log2(maxPerCapita)) - minLogPerCapita;
+
+    minLogNewCases =
+      minNewCases[colorMapBy] < 1 ? 0 : Math.log2(minNewCases[colorMapBy]);
+    logNewCasesSpan =
+      (maxNewCases[colorMapBy] < 1 ? 0 : Math.log2(maxNewCases[colorMapBy])) -
+      minLogNewCases;
+    minLogNewCasesPerCapita =
+      minNewCasesPerCapita[colorMapBy] < 1
+        ? 0
+        : Math.log2(minNewCasesPerCapita[colorMapBy]);
+    logNewCasesPerCapitaSpan =
+      (maxNewCasesPerCapita[colorMapBy] < 1
+        ? 0
+        : Math.log2(maxNewCasesPerCapita[colorMapBy])) -
+      minLogNewCasesPerCapita;
   };
 
   const getScale = cases => {
-    const lowerBound = colorMapPerCapita ? minLogPerCapita : minLogCases;
-    const logSpan = colorMapPerCapita ? logPerCapitaSpan : logCasesSpan;
-    if (cases < 1 || logCasesSpan === 0) {
-      return 0;
+    let lowerBound = colorMapPerCapita ? minLogPerCapita : minLogCases;
+    if (colorMapNewCases) {
+      lowerBound = colorMapPerCapita ? minLogNewCasesPerCapita : minLogNewCases;
     }
-    return Math.floor(((Math.log2(cases) - lowerBound) / logSpan) * 10);
+
+    let logSpan = colorMapPerCapita ? logPerCapitaSpan : logCasesSpan;
+    if (colorMapNewCases) {
+      logSpan = colorMapPerCapita ? logNewCasesPerCapitaSpan : logNewCasesSpan;
+    }
+    let scale = 0;
+    if (cases > 1 && logCasesSpan !== 0) {
+      scale = Math.floor(((Math.log2(cases) - lowerBound) / logSpan) * 10);
+    }
+    return scale;
   };
 
   const haveDataForGeo = geo => {
@@ -113,11 +205,15 @@ function CovidMap({
     stats.fipsFormatted = formatGeoId(geo.id);
     stats.geoName = names[stats.fipsFormatted];
     stats.population = population[stats.fipsFormatted];
-    stats.confirmed = data.confirmed[date][stats.fipsFormatted];
+    stats.confirmed = colorMapNewCases
+      ? newCases.confirmed[stats.fipsFormatted]
+      : data.confirmed[date][stats.fipsFormatted];
     stats.confirmedPerM = Math.ceil(
       (stats.confirmed / stats.population) * 10 ** 6,
     );
-    stats.deaths = data.deaths[date][stats.fipsFormatted];
+    stats.deaths = colorMapNewCases
+      ? newCases.deaths[stats.fipsFormatted]
+      : data.deaths[date][stats.fipsFormatted];
     stats.deathsPerM = Math.ceil((stats.deaths / stats.population) * 10 ** 6);
     stats.centroid = geoCentroid(geo);
     return stats;
@@ -214,7 +310,9 @@ function CovidMap({
     let cases = 0;
     const fipsFormatted = formatGeoId(geo.id);
     if (data && currentDate) {
-      cases = data[colorMapBy][currentDate][fipsFormatted];
+      cases = colorMapNewCases
+        ? newCases[colorMapBy][fipsFormatted]
+        : data[colorMapBy][currentDate][fipsFormatted];
       if (colorMapPerCapita) {
         cases = (cases / population[fipsFormatted]) * 10 ** 9;
       }
@@ -332,6 +430,7 @@ CovidMap.propTypes = {
   data: PropTypes.any,
   searchWith: PropTypes.string,
   colorMapBy: PropTypes.oneOf(['confirmed', 'deaths']),
+  colorMapNewCases: PropTypes.bool,
   colorMapPerCapita: PropTypes.bool,
   zoomState: PropTypes.any,
   onUpdateZoomState: PropTypes.func,

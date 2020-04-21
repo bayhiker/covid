@@ -20,6 +20,7 @@ import {
   CHANGE_SEARCH_WITH,
   CHANGE_COLOR_MAP_BY,
   CHANGE_COLOR_MAP_PER_CAPITA,
+  CHANGE_COLOR_MAP_NEW_CASES,
   UPDATE_ZOOM_STATE,
 } from './constants';
 
@@ -47,6 +48,13 @@ export function changeColorMapPerCapita(colorMapPerCapita) {
   return {
     type: CHANGE_COLOR_MAP_PER_CAPITA,
     colorMapPerCapita,
+  };
+}
+
+export function changeColorMapNewCases(colorMapNewCases) {
+  return {
+    type: CHANGE_COLOR_MAP_NEW_CASES,
+    colorMapNewCases,
   };
 }
 

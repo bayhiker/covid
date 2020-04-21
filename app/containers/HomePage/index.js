@@ -30,12 +30,14 @@ import {
   makeSelectHomeColorMapBy,
   makeSelectHomeColorMapPerCapita,
   makeSelectHomeZoomState,
+  makeSelectHomeColorMapNewCases,
 } from './selectors';
 import {
   changeSearchWith,
   changeColorMapBy,
   changeColorMapPerCapita,
   updateZoomState,
+  changeColorMapNewCases,
 } from './actions';
 import { clearStateDialog } from '../../utils/dialogState';
 import CovidMap from '../../components/CovidMap';
@@ -50,11 +52,13 @@ export function HomePage({
   searchWith,
   colorMapBy,
   colorMapPerCapita,
+  colorMapNewCases,
   zoomState,
   onClickDialogOk,
   onChangeSearchWith,
   onChangeColorMapBy,
   onChangeColorMapPerCapita,
+  onChangeColorMapNewCases,
   onUpdateZoomState,
 }) {
   const [data, setData] = React.useState({});
@@ -156,9 +160,11 @@ export function HomePage({
     searchWith,
     colorMapBy,
     colorMapPerCapita,
+    colorMapNewCases,
     onChangeSearchWith,
     onChangeColorMapBy,
     onChangeColorMapPerCapita,
+    onChangeColorMapNewCases,
   };
 
   const covidMapProps = {
@@ -167,6 +173,7 @@ export function HomePage({
     searchWith,
     colorMapBy,
     colorMapPerCapita,
+    colorMapNewCases,
     onUpdateZoomState,
   };
 
@@ -207,11 +214,13 @@ HomePage.propTypes = {
   searchWith: PropTypes.string,
   colorMapBy: PropTypes.oneOf(['confirmed', 'deaths']),
   colorMapPerCapita: PropTypes.bool,
+  colorMapNewCases: PropTypes.bool,
   zoomState: PropTypes.any,
   onClickDialogOk: PropTypes.func,
   onChangeSearchWith: PropTypes.func,
   onChangeColorMapBy: PropTypes.func,
   onChangeColorMapPerCapita: PropTypes.func,
+  onChangeColorMapNewCases: PropTypes.func,
   onUpdateZoomState: PropTypes.func,
 };
 
@@ -222,6 +231,7 @@ const mapStateToProps = createStructuredSelector({
   searchWith: makeSelectHomeSearchWith(),
   colorMapBy: makeSelectHomeColorMapBy(),
   colorMapPerCapita: makeSelectHomeColorMapPerCapita(),
+  colorMapNewCases: makeSelectHomeColorMapNewCases(),
   zoomState: makeSelectHomeZoomState(),
 });
 
@@ -238,6 +248,9 @@ function mapDispatchToProps(dispatch) {
     },
     onChangeColorMapPerCapita: evt => {
       dispatch(changeColorMapPerCapita(evt.target.checked));
+    },
+    onChangeColorMapNewCases: evt => {
+      dispatch(changeColorMapNewCases(evt.target.checked));
     },
     onUpdateZoomState: zoomState => {
       dispatch(updateZoomState(zoomState));

@@ -13,6 +13,7 @@ import {
   UPDATE_ZOOM_STATE,
   GEO_JSON_URL_COUNTIES,
   GEO_JSON_URL_STATES,
+  CHANGE_COLOR_MAP_NEW_CASES,
 } from './constants';
 import { config } from '../../constants';
 import {
@@ -28,6 +29,7 @@ export const initialState = getDialogInitialState({
   searchWith: '',
   colorMapBy: 'deaths',
   colorMapPerCapita: false,
+  colorMapNewCases: false,
   // Data to be dynamically loaded from server
   data: {},
   zoomState: {
@@ -95,6 +97,9 @@ const homePageReducer = (state = initialState, action) =>
         break;
       case CHANGE_COLOR_MAP_PER_CAPITA:
         draft.userData.colorMapPerCapita = action.colorMapPerCapita;
+        break;
+      case CHANGE_COLOR_MAP_NEW_CASES:
+        draft.userData.colorMapNewCases = action.colorMapNewCases;
         break;
       case UPDATE_ZOOM_STATE:
         updateZoomState(draft, action.zoomState);

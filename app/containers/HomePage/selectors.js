@@ -44,6 +44,9 @@ const makeSelectHomeColorMapBy = () =>
 const makeSelectHomeColorMapPerCapita = () =>
   makeSelectUserData(selectHomePageDomain, 'colorMapPerCapita');
 
+const makeSelectHomeColorMapNewCases = () =>
+  makeSelectUserData(selectHomePageDomain, 'colorMapNewCases');
+
 const makeSelectHomeZoomState = () =>
   makeSelectUserData(selectHomePageDomain, 'zoomState');
 
@@ -56,5 +59,6 @@ export {
   makeSelectHomeSearchWith,
   makeSelectHomeColorMapBy,
   makeSelectHomeColorMapPerCapita,
+  makeSelectHomeColorMapNewCases,
   makeSelectHomeZoomState,
 };

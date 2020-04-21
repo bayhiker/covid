@@ -14,7 +14,12 @@ import {
   Divider,
 } from '@material-ui/core';
 import PropTypes from 'prop-types';
-import { SchoolOutlined, LocalHospital, GitHub } from '@material-ui/icons';
+import {
+  SchoolOutlined,
+  LocalHospital,
+  GitHub,
+  StorageOutlined,
+} from '@material-ui/icons';
 import YouQuizPopover from '../YouQuizPopover';
 
 const useStyles = makeStyles(theme => ({
@@ -47,7 +52,7 @@ function CovidThanks({ children }) {
           <SchoolOutlined />
         </ListItemIcon>
         <ListItemText
-          primary="John Hopkins University"
+          primary="JHU, Descarte"
           secondary={<React.Fragment>and all data publishers</React.Fragment>}
         />
       </ListItem>
