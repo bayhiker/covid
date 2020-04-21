@@ -136,7 +136,7 @@ const extractDataToPlot = (data, zoomState) => {
 const getCasesCharts = (caption, casesDataToPlot) => (
   <div>
     <CenteredSection>
-      <Typography variant="h5">{caption}</Typography>
+      <Typography variant="h5">{caption} - Cases</Typography>
       <ResponsiveContainer
         width="100%"
         aspect={2.0 / 1.0}
@@ -200,10 +200,10 @@ const getCasesCharts = (caption, casesDataToPlot) => (
   </div>
 );
 
-const getDoublingCharts = casesDataToPlot => (
+const getDoublingCharts = (caption, casesDataToPlot) => (
   <div>
     <CenteredSection>
-      <Typography variant="h5">Doubling Every x Days</Typography>
+      <Typography variant="h5">{caption} - Doubling Every x Days</Typography>
       <Typography variant="subtitle2" color="textSecondary">
         How fast cases have been doubling. COVID-19 patient are on average
         hospitalized for{' '}
@@ -324,7 +324,7 @@ function CovidPlot({ data, zoomState, perCapita }) {
         {getCasesCharts(caption, casesDataToPlot)}
       </TabPanel>
       <TabPanel value={value} index={1}>
-        {getDoublingCharts(casesDataToPlot)}
+        {getDoublingCharts(caption, casesDataToPlot)}
       </TabPanel>
     </div>
   );
