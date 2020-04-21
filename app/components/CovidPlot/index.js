@@ -6,14 +6,7 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import {
-  Typography,
-  AppBar,
-  Tabs,
-  Tab,
-  Box,
-  makeStyles,
-} from '@material-ui/core';
+import { Typography, Tabs, Tab, Box, makeStyles } from '@material-ui/core';
 import {
   LineChart,
   Line,
@@ -43,6 +36,8 @@ const useStyles = makeStyles(theme => ({
     backgroundColor: theme.palette.background.paper,
   },
 }));
+
+const getDoublingDataKey = caseType => `${caseType} doubled every(days)`;
 
 const extractDataToPlot = (data, zoomState) => {
   const casesDataToPlot = [];
@@ -74,25 +69,41 @@ const extractDataToPlot = (data, zoomState) => {
   let prevTotalConfirmed = 0;
   let prevMobility = -1;
   let firstValidMobilityFound = false;
-  let confirmedDoubledSinceIndex = 0;
-  let deathsDoubledSinceIndex = 0;
+  const doubledSinceIndex = { confirmed: 0, deaths: 0 };
+  let currentTotalCases = {};
+  let currentDataPoint = {};
+  const searchForDoubled = (caseType, minCases) => {
+    if (currentTotalCases[caseType] < minCases) {
+      return;
+    }
+    while (
+      doubledSinceIndex[caseType] < casesDataToPlot.length - 1 &&
+      casesDataToPlot[doubledSinceIndex[caseType]][caseType] <
+        currentTotalCases[caseType] / 2
+    ) {
+      doubledSinceIndex[caseType] += 1;
+    }
+    currentDataPoint[getDoublingDataKey(caseType)] =
+      casesDataToPlot.length - doubledSinceIndex[caseType];
+  };
   for (let d = startDate; d <= endDate; d.setDate(d.getDate() + 1)) {
     const seriesKey = dateToTitle(d);
-    const totalConfirmed = countyLevel
+    currentTotalCases = {};
+    currentTotalCases.confirmed = countyLevel
       ? data.confirmed[seriesKey][geoId]
       : timeSeriesConfirmed[seriesKey];
-    const totalDeaths = countyLevel
+    currentTotalCases.deaths = countyLevel
       ? data.deaths[seriesKey][geoId]
       : timeSeriesDeaths[seriesKey];
     const mobility = countyLevel
       ? data.mobility[seriesKey][geoId]
       : timeSeriesMobility[seriesKey];
-    const dataPoint = {
+    currentDataPoint = {
       name: dateToShortTitle(d),
-      confirmed: totalConfirmed,
-      deaths: totalDeaths,
-      'new confirmed': totalConfirmed - prevTotalConfirmed,
-      'new deaths': totalDeaths - prevTotalDeaths,
+      confirmed: currentTotalCases.confirmed,
+      deaths: currentTotalCases.deaths,
+      'new confirmed': currentTotalCases.confirmed - prevTotalConfirmed,
+      'new deaths': currentTotalCases.deaths - prevTotalDeaths,
     };
     if (
       !firstValidMobilityFound &&
@@ -103,34 +114,16 @@ const extractDataToPlot = (data, zoomState) => {
     }
 
     if (firstValidMobilityFound) {
-      dataPoint.mobility = mobility;
+      currentDataPoint.mobility = mobility;
     }
 
-    // Calculate doubled in x days
-    if (totalConfirmed > 63) {
-      while (
-        confirmedDoubledSinceIndex < casesDataToPlot.length - 1 &&
-        casesDataToPlot[confirmedDoubledSinceIndex].confirmed <
-          totalConfirmed / 2
-      ) {
-        confirmedDoubledSinceIndex += 1;
-      }
-      dataPoint['confirmed doubles every(days)'] =
-        casesDataToPlot.length - confirmedDoubledSinceIndex;
-    }
-    if (totalDeaths > 3) {
-      while (
-        deathsDoubledSinceIndex < casesDataToPlot.length - 1 &&
-        casesDataToPlot[deathsDoubledSinceIndex].deaths < totalDeaths / 2
-      ) {
-        deathsDoubledSinceIndex += 1;
-      }
-      dataPoint['deaths doubles every(days)'] =
-        casesDataToPlot.length - deathsDoubledSinceIndex;
-    }
-    casesDataToPlot.push(dataPoint);
-    prevTotalConfirmed = totalConfirmed;
-    prevTotalDeaths = totalDeaths;
+    // Calculate and filled doubled in x days
+    searchForDoubled('confirmed', 63);
+    searchForDoubled('deaths', 5);
+
+    casesDataToPlot.push(currentDataPoint);
+    prevTotalConfirmed = currentTotalCases.confirmed;
+    prevTotalDeaths = currentTotalCases.deaths;
     prevMobility = mobility;
   }
 
@@ -211,6 +204,17 @@ const getDoublingCharts = casesDataToPlot => (
   <div>
     <CenteredSection>
       <Typography variant="h5">Doubling Every x Days</Typography>
+      <Typography variant="subtitle2" color="textSecondary">
+        How fast cases have been doubling. COVID-19 patient are on average
+        hospitalized for{' '}
+        <a
+          target="_"
+          href="https://youquiz.me/community/topic/8/how-long-do-covid-patients-stay-in-the-hospital"
+        >
+          8 days
+        </a>
+        , therefore when doubling days falls below 8 days, COVID-19 has peaked.
+      </Typography>
       <ResponsiveContainer
         width="100%"
         aspect={2.0 / 1.0}
@@ -221,13 +225,13 @@ const getDoublingCharts = casesDataToPlot => (
           <Line
             yAxisId="right"
             type="monotone"
-            dataKey="confirmed doubles every(days)"
+            dataKey={getDoublingDataKey('confirmed')}
             stroke="#00F"
           />
           <Line
             yAxisId="right"
             type="monotone"
-            dataKey="deaths doubles every(days)"
+            dataKey={getDoublingDataKey('deaths')}
             stroke="#F00"
           />
           <Line
@@ -245,6 +249,7 @@ const getDoublingCharts = casesDataToPlot => (
               value: 'Days',
               position: 'insideBottomRight',
             }}
+            allowDecimals
           />
           <YAxis
             yAxisId="left"

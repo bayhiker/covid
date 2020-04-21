@@ -1,5 +1,5 @@
 import React from 'react';
-import PropTypes, { object } from 'prop-types';
+import PropTypes from 'prop-types';
 // import styled from 'styled-components';
 
 import {
@@ -13,7 +13,7 @@ import {
 import { scaleQuantize } from 'd3-scale';
 import { geoCentroid } from 'd3';
 import ReactTooltip from 'react-tooltip';
-import { Typography, createStyles } from '@material-ui/core';
+import { Typography } from '@material-ui/core';
 
 import {
   usStates,
@@ -136,37 +136,41 @@ function CovidMap({
   };
 
   const recalculateBounds = () => {
-    if (
-      !data ||
-      !data[colorMapBy] ||
-      minNewCases[colorMapBy] > 1000000 ||
-      maxNewCases[colorMapBy] < 0
-    ) {
+    console.log(`Recalculating cases, start...`);
+    if (!data || !data[colorMapBy]) {
       return;
     }
+    console.log(`Recalculating cases, condition met, doing recalc...`);
     const { minCases, maxCases, minPerCapita, maxPerCapita } = data[colorMapBy][
       data.most_recent_date
     ];
+    console.log(`minCases is ${minCases}`);
     minLogCases = minCases === 0 ? 0 : Math.log2(minCases);
     logCasesSpan = (maxCases === 0 ? 0 : Math.log2(maxCases)) - minLogCases;
     minLogPerCapita = minPerCapita === 0 ? 0 : Math.log2(minPerCapita);
     logPerCapitaSpan =
       (maxPerCapita === 0 ? 0 : Math.log2(maxPerCapita)) - minLogPerCapita;
 
-    minLogNewCases =
-      minNewCases[colorMapBy] < 1 ? 0 : Math.log2(minNewCases[colorMapBy]);
-    logNewCasesSpan =
-      (maxNewCases[colorMapBy] < 1 ? 0 : Math.log2(maxNewCases[colorMapBy])) -
-      minLogNewCases;
-    minLogNewCasesPerCapita =
-      minNewCasesPerCapita[colorMapBy] < 1
-        ? 0
-        : Math.log2(minNewCasesPerCapita[colorMapBy]);
-    logNewCasesPerCapitaSpan =
-      (maxNewCasesPerCapita[colorMapBy] < 1
-        ? 0
-        : Math.log2(maxNewCasesPerCapita[colorMapBy])) -
-      minLogNewCasesPerCapita;
+    if (minNewCases[colorMapBy] < 1000000 && maxNewCases[colorMapBy] > 0) {
+      // New cases numbers valid, update new cases span
+      minLogNewCases =
+        minNewCases[colorMapBy] < 1 ? 0 : Math.log2(minNewCases[colorMapBy]);
+      logNewCasesSpan =
+        (maxNewCases[colorMapBy] < 1 ? 0 : Math.log2(maxNewCases[colorMapBy])) -
+        minLogNewCases;
+      minLogNewCasesPerCapita =
+        minNewCasesPerCapita[colorMapBy] < 1
+          ? 0
+          : Math.log2(minNewCasesPerCapita[colorMapBy]);
+      logNewCasesPerCapitaSpan =
+        (maxNewCasesPerCapita[colorMapBy] < 1
+          ? 0
+          : Math.log2(maxNewCasesPerCapita[colorMapBy])) -
+        minLogNewCasesPerCapita;
+    }
+    console.log(
+      `#######################################minLogCases is ${minLogCases} logcasesspan is ${logCasesSpan}`,
+    );
   };
 
   const getScale = cases => {
