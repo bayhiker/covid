@@ -136,15 +136,12 @@ function CovidMap({
   };
 
   const recalculateBounds = () => {
-    console.log(`Recalculating cases, start...`);
     if (!data || !data[colorMapBy]) {
       return;
     }
-    console.log(`Recalculating cases, condition met, doing recalc...`);
     const { minCases, maxCases, minPerCapita, maxPerCapita } = data[colorMapBy][
       data.most_recent_date
     ];
-    console.log(`minCases is ${minCases}`);
     minLogCases = minCases === 0 ? 0 : Math.log2(minCases);
     logCasesSpan = (maxCases === 0 ? 0 : Math.log2(maxCases)) - minLogCases;
     minLogPerCapita = minPerCapita === 0 ? 0 : Math.log2(minPerCapita);
@@ -168,9 +165,6 @@ function CovidMap({
           : Math.log2(maxNewCasesPerCapita[colorMapBy])) -
         minLogNewCasesPerCapita;
     }
-    console.log(
-      `#######################################minLogCases is ${minLogCases} logcasesspan is ${logCasesSpan}`,
-    );
   };
 
   const getScale = cases => {
