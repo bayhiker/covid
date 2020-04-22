@@ -100,11 +100,6 @@ function CovidMap({
     logBounds.lower = minCases === 0 ? 0 : Math.log2(minCases);
     logBounds.span =
       (maxCases === 0 ? 0 : Math.log2(maxCases)) - logBounds.lower;
-    console.log(
-      `colorMapBy is ${colorMapBy} minCases is ${minCases}, maxCases is ${maxCases}, logBounds is ${JSON.stringify(
-        logBounds,
-      )}`,
-    );
   };
 
   React.useEffect(() => {
@@ -166,13 +161,6 @@ function CovidMap({
         ((Math.log2(cases) - logBounds.lower) / logBounds.span) * 10,
       );
     }
-    /*
-    console.log(
-      `cases is ${cases}, logBounds are ${JSON.stringify(
-        logBounds,
-      )}, scale is ${scale}}`,
-    );
-    */
     return scale;
   };
 
