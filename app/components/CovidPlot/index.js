@@ -297,7 +297,7 @@ function a11yProps(index) {
   };
 }
 
-function CovidPlot({ data, zoomState, perCapita }) {
+function CovidPlot({ data, zoomState }) {
   const classes = useStyles();
   const [value, setValue] = React.useState(0);
 
@@ -333,7 +333,6 @@ function CovidPlot({ data, zoomState, perCapita }) {
 CovidPlot.propTypes = {
   data: PropTypes.any,
   zoomState: PropTypes.any,
-  perCapita: PropTypes.bool,
 };
 
 export default CovidPlot;

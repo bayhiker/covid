@@ -180,7 +180,6 @@ export function HomePage({
   const covidPlotProps = {
     data,
     zoomState,
-    perCapita: colorMapPerCapita,
   };
 
   return (

@@ -51,7 +51,21 @@ const stateOffsets = {
   DC: [49, 21],
 };
 
-const defaultMinNewCases = 10000000;
+const BIG_CASE_NUMBER = 10000000;
+const DEFAULT_NEW_CASES = {
+  confirmed: {
+    minCases: BIG_CASE_NUMBER,
+    maxCases: -1,
+    minPerCapita: BIG_CASE_NUMBER,
+    maxPerCapita: -1,
+  },
+  deaths: {
+    minCases: BIG_CASE_NUMBER,
+    maxCases: -1,
+    minPerCapita: BIG_CASE_NUMBER,
+    maxPerCapita: -1,
+  },
+}; // New cases on most recent date
 
 function CovidMap({
   data,
@@ -63,40 +77,50 @@ function CovidMap({
   onUpdateZoomState,
 }) {
   const [tooltipContent, setTooltipContent] = React.useState('');
-  const [newCases, setNewCases] = React.useState({ confirmed: {}, deaths: {} }); // New cases on most recent date
+  const [newCases, setNewCases] = React.useState(DEFAULT_NEW_CASES);
   let caption = '';
   const currentDate = data.most_recent_date;
   const { population, names } = data;
-  let logCasesSpan = 24;
-  let minLogCases = 0;
-  let logPerCapitaSpan = 24;
-  let minLogPerCapita = 0;
-  const minNewCases = {
-    confirmed: defaultMinNewCases,
-    deaths: defaultMinNewCases,
+
+  const [logBounds, setLogBounds] = React.useState({
+    lower: 0,
+    span: 20,
+  });
+
+  const recalculateBounds = () => {
+    if (!data || !data[colorMapBy] || !newCases || !newCases[colorMapBy]) {
+      return;
+    }
+    const cases = colorMapNewCases
+      ? newCases[colorMapBy]
+      : data[colorMapBy][data.most_recent_date];
+    const minCases = colorMapPerCapita ? cases.minPerCapita : cases.minCases;
+    const maxCases = colorMapPerCapita ? cases.maxPerCapita : cases.maxCases;
+
+    logBounds.lower = minCases === 0 ? 0 : Math.log2(minCases);
+    logBounds.span =
+      (maxCases === 0 ? 0 : Math.log2(maxCases)) - logBounds.lower;
+    console.log(
+      `colorMapBy is ${colorMapBy} minCases is ${minCases}, maxCases is ${maxCases}, logBounds is ${JSON.stringify(
+        logBounds,
+      )}`,
+    );
   };
-  const maxNewCases = { confirmed: -1, deaths: -1 };
-  const minNewCasesPerCapita = {
-    confirmed: defaultMinNewCases,
-    deaths: defaultMinNewCases,
-  };
-  const maxNewCasesPerCapita = { confirmed: -1, deaths: -1 };
-  let logNewCasesSpan = 24;
-  let minLogNewCases = 0;
-  let logNewCasesPerCapitaSpan = 24;
-  let minLogNewCasesPerCapita = 0;
 
   React.useEffect(() => {
     recalculateNewCases();
     recalculateBounds();
   }, [data]);
 
+  // Recalculate bounds even if no data was reloaded, for example if perCapita switch changed
+  recalculateBounds();
+
   const recalculateNewCases = () => {
     const todayTitle = data.most_recent_date;
     if (!todayTitle) {
       return;
     }
-    const updatedNewCases = { confirmed: {}, deaths: {} };
+    const updatedNewCases = DEFAULT_NEW_CASES;
     ['confirmed', 'deaths'].forEach(caseType => {
       const dataToday = data[caseType][todayTitle];
       const dataYesterday = data[caseType][prevDateTitle(todayTitle)];
@@ -107,7 +131,7 @@ function CovidMap({
         const newCasesForFips = dataToday[fips] - dataYesterday[fips];
         updatedNewCases[caseType][fips] = newCasesForFips;
         const newCasesPerCapita =
-          (newCasesForFips / population[fips]) * 1000000;
+          (newCasesForFips / population[fips]) * 10 ** 6;
         if (
           newCasesForFips < 0 ||
           Number.isNaN(newCasesForFips) ||
@@ -118,69 +142,37 @@ function CovidMap({
         ) {
           return;
         }
-        if (newCasesForFips < minNewCases[caseType]) {
-          minNewCases[caseType] = newCasesForFips;
+        if (newCasesForFips < newCases[caseType].minCases) {
+          newCases[caseType].minCases = newCasesForFips;
         }
-        if (newCasesForFips > maxNewCases[caseType]) {
-          maxNewCases[caseType] = newCasesForFips;
+        if (newCasesForFips > newCases[caseType].maxCases) {
+          newCases[caseType].maxCases = newCasesForFips;
         }
-        if (newCasesPerCapita < minNewCasesPerCapita[caseType]) {
-          minNewCasesPerCapita[caseType] = newCasesPerCapita;
+        if (newCasesPerCapita < newCases[caseType].minPerCapita) {
+          newCases[caseType].minPerCapita = newCasesPerCapita;
         }
-        if (newCasesPerCapita > maxNewCasesPerCapita[caseType]) {
-          maxNewCasesPerCapita[caseType] = newCasesPerCapita;
+        if (newCasesPerCapita > newCases[caseType].maxPerCapita) {
+          newCases[caseType].maxPerCapita = newCasesPerCapita;
         }
       });
     });
     setNewCases(updatedNewCases);
   };
 
-  const recalculateBounds = () => {
-    if (!data || !data[colorMapBy]) {
-      return;
-    }
-    const { minCases, maxCases, minPerCapita, maxPerCapita } = data[colorMapBy][
-      data.most_recent_date
-    ];
-    minLogCases = minCases === 0 ? 0 : Math.log2(minCases);
-    logCasesSpan = (maxCases === 0 ? 0 : Math.log2(maxCases)) - minLogCases;
-    minLogPerCapita = minPerCapita === 0 ? 0 : Math.log2(minPerCapita);
-    logPerCapitaSpan =
-      (maxPerCapita === 0 ? 0 : Math.log2(maxPerCapita)) - minLogPerCapita;
-
-    if (minNewCases[colorMapBy] < 1000000 && maxNewCases[colorMapBy] > 0) {
-      // New cases numbers valid, update new cases span
-      minLogNewCases =
-        minNewCases[colorMapBy] < 1 ? 0 : Math.log2(minNewCases[colorMapBy]);
-      logNewCasesSpan =
-        (maxNewCases[colorMapBy] < 1 ? 0 : Math.log2(maxNewCases[colorMapBy])) -
-        minLogNewCases;
-      minLogNewCasesPerCapita =
-        minNewCasesPerCapita[colorMapBy] < 1
-          ? 0
-          : Math.log2(minNewCasesPerCapita[colorMapBy]);
-      logNewCasesPerCapitaSpan =
-        (maxNewCasesPerCapita[colorMapBy] < 1
-          ? 0
-          : Math.log2(maxNewCasesPerCapita[colorMapBy])) -
-        minLogNewCasesPerCapita;
-    }
-  };
-
   const getScale = cases => {
-    let lowerBound = colorMapPerCapita ? minLogPerCapita : minLogCases;
-    if (colorMapNewCases) {
-      lowerBound = colorMapPerCapita ? minLogNewCasesPerCapita : minLogNewCases;
-    }
-
-    let logSpan = colorMapPerCapita ? logPerCapitaSpan : logCasesSpan;
-    if (colorMapNewCases) {
-      logSpan = colorMapPerCapita ? logNewCasesPerCapitaSpan : logNewCasesSpan;
-    }
     let scale = 0;
-    if (cases > 1 && logCasesSpan !== 0) {
-      scale = Math.floor(((Math.log2(cases) - lowerBound) / logSpan) * 10);
+    if (cases > 1 && logBounds.span !== 0) {
+      scale = Math.floor(
+        ((Math.log2(cases) - logBounds.lower) / logBounds.span) * 10,
+      );
     }
+    /*
+    console.log(
+      `cases is ${cases}, logBounds are ${JSON.stringify(
+        logBounds,
+      )}, scale is ${scale}}`,
+    );
+    */
     return scale;
   };
 
@@ -312,7 +304,7 @@ function CovidMap({
         ? newCases[colorMapBy][fipsFormatted]
         : data[colorMapBy][currentDate][fipsFormatted];
       if (colorMapPerCapita) {
-        cases = (cases / population[fipsFormatted]) * 10 ** 9;
+        cases = (cases / population[fipsFormatted]) * 10 ** 6;
       }
     }
     return (
