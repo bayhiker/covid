@@ -15,14 +15,24 @@ export function titleToDate(t) {
   );
 }
 
+export function newDateWithOffset(d, offset) {
+  const newDate = new Date(d.getTime());
+  newDate.setDate(newDate.getDate() + offset);
+  return newDate;
+}
+
 export function prevDateTitle(dateTitle) {
-  const yesterday = new Date();
-  yesterday.setDate(titleToDate(dateTitle).getDate() - 1);
-  return dateToTitle(yesterday);
+  return dateToTitle(newDateWithOffset(titleToDate(dateTitle), -1));
 }
 
 export function nextDateTitle(dateTitle) {
-  const tomorrow = new Date();
-  tomorrow.setDate(titleToDate(dateTitle).getDate() + 1);
-  return dateToTitle(tomorrow);
+  return dateToTitle(newDateWithOffset(titleToDate(dateTitle), 1));
+}
+
+export function getDaysApart(startDateTitle, endDateTitle) {
+  const startDate = titleToDate(startDateTitle);
+  const endDate = titleToDate(endDateTitle);
+  return Math.ceil(
+    Math.abs(endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+  );
 }

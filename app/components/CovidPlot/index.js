@@ -205,7 +205,7 @@ const getDoublingCharts = (caption, casesDataToPlot) => (
     <CenteredSection>
       <Typography variant="h5">{caption} - Doubling Every x Days</Typography>
       <Typography variant="subtitle2" color="textSecondary">
-        How fast cases have been doubling. COVID-19 patient are on average
+        Cases doubled since x days ago. COVID-19 patient are on average
         hospitalized for{' '}
         <a
           target="_"
@@ -213,7 +213,8 @@ const getDoublingCharts = (caption, casesDataToPlot) => (
         >
           8 days
         </a>
-        , therefore when doubling days falls below 8 days, COVID-19 has peaked.
+        , therefore when doubling days falls below 8 days, total hospitalization
+        will fall.
       </Typography>
       <ResponsiveContainer
         width="100%"

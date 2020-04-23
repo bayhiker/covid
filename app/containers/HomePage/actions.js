@@ -21,6 +21,7 @@ import {
   CHANGE_COLOR_MAP_BY,
   CHANGE_COLOR_MAP_PER_CAPITA,
   CHANGE_COLOR_MAP_NEW_CASES,
+  CHANGE_CURRENT_DATE,
   UPDATE_ZOOM_STATE,
 } from './constants';
 
@@ -55,6 +56,13 @@ export function changeColorMapNewCases(colorMapNewCases) {
   return {
     type: CHANGE_COLOR_MAP_NEW_CASES,
     colorMapNewCases,
+  };
+}
+
+export function changeCurrentDate(currentDate) {
+  return {
+    type: CHANGE_CURRENT_DATE,
+    currentDate,
   };
 }
 

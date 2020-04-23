@@ -50,6 +50,9 @@ const makeSelectHomeColorMapNewCases = () =>
 const makeSelectHomeZoomState = () =>
   makeSelectUserData(selectHomePageDomain, 'zoomState');
 
+const makeSelectHomeCurrentDate = () =>
+  makeSelectUserData(selectHomePageDomain, 'currentDate');
+
 export default makeSelectHomePage;
 export {
   selectHomePageDomain,
@@ -61,4 +64,5 @@ export {
   makeSelectHomeColorMapPerCapita,
   makeSelectHomeColorMapNewCases,
   makeSelectHomeZoomState,
+  makeSelectHomeCurrentDate,
 };

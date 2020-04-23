@@ -12,6 +12,7 @@ export const CHANGE_COLOR_MAP_PER_CAPITA =
 export const CHANGE_COLOR_MAP_NEW_CASES =
   'app/HomePage/CHANGE_COLOR_MAP_NEW_CASES';
 export const UPDATE_ZOOM_STATE = 'app/HomePage/UPDATE_ZOOM_STATE';
+export const CHANGE_CURRENT_DATE = 'app/HomePage/CHANGE_CURRENT_DATE';
 
 export const GEO_JSON_URL_STATES =
   'https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json';

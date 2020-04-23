@@ -13,7 +13,7 @@ import {
 import { scaleQuantize } from 'd3-scale';
 import { geoCentroid } from 'd3';
 import ReactTooltip from 'react-tooltip';
-import { Typography } from '@material-ui/core';
+import { Typography, Slider } from '@material-ui/core';
 
 import {
   usStates,
@@ -23,7 +23,14 @@ import {
   geoIsState,
 } from '../../utils/mapUtils';
 import { CenteredSection } from '../../utils/styledUtil';
-import { prevDateTitle } from '../../utils/dateUtils';
+import {
+  titleToDate,
+  dateToTitle,
+  dateToShortTitle,
+  prevDateTitle,
+  getDaysApart,
+  newDateWithOffset,
+} from '../../utils/dateUtils';
 
 const colorScale = scaleQuantize()
   .domain([1, 10])
@@ -69,31 +76,39 @@ const DEFAULT_NEW_CASES = {
 
 function CovidMap({
   data,
+  currentDate,
   zoomState,
   searchWith,
   colorMapBy,
   colorMapPerCapita,
   colorMapNewCases,
   onUpdateZoomState,
+  onChangeCurrentDate,
 }) {
   const [tooltipContent, setTooltipContent] = React.useState('');
   const [newCases, setNewCases] = React.useState(DEFAULT_NEW_CASES);
-  let caption = '';
-  const currentDate = data.most_recent_date;
-  const { population, names } = data;
-
+  const [mostRecentDate, setMostRecentDate] = React.useState();
+  const [sliderMarks, setSliderMarks] = React.useState([]);
   const [logBounds, setLogBounds] = React.useState({
     lower: 0,
     span: 20,
   });
+  let caption = '';
+  const { population, names } = data;
 
   const recalculateBounds = () => {
-    if (!data || !data[colorMapBy] || !newCases || !newCases[colorMapBy]) {
+    if (
+      !currentDate ||
+      !data ||
+      !data[colorMapBy] ||
+      !newCases ||
+      !newCases[colorMapBy]
+    ) {
       return;
     }
     const cases = colorMapNewCases
       ? newCases[colorMapBy]
-      : data[colorMapBy][data.most_recent_date];
+      : data[colorMapBy][currentDate];
     const minCases = colorMapPerCapita ? cases.minPerCapita : cases.minCases;
     const maxCases = colorMapPerCapita ? cases.maxPerCapita : cases.maxCases;
 
@@ -103,22 +118,76 @@ function CovidMap({
   };
 
   React.useEffect(() => {
+    if (!data || !data.most_recent_date) {
+      return;
+    }
+    setMostRecentDate(data.most_recent_date);
+    updateSliderMarks();
     recalculateNewCases();
     recalculateBounds();
-  }, [data]);
+  }, [data, currentDate]);
 
   // Recalculate bounds even if no data was reloaded, for example if perCapita switch changed
   recalculateBounds();
 
+  const getAllZeroCases = caseType => {
+    const allZeroCases = {
+      minCases: 0,
+      maxCases: 0,
+      minPerCapita: 0,
+      maxPerCapita: 0,
+    };
+    if (!data || !data.most_recent_date) {
+      return allZeroCases;
+    }
+    // Assuming we always have data for most recent day
+    const dataMostRecentDay = data[caseType][data.most_recent_date];
+    Object.keys(dataMostRecentDay).forEach(fips => {
+      if (!fips || !/^\d+$/.test(fips)) {
+        return;
+      }
+      allZeroCases[fips] = 0;
+    });
+    return allZeroCases;
+  };
+
+  const updateSliderMarks = () => {
+    if (!data.most_recent_date) {
+      return;
+    }
+    const newSliderMarks = [];
+    const endDate = titleToDate(data.most_recent_date);
+    const totalDays = getDaysApart(
+      data.least_recent_date,
+      data.most_recent_date,
+    );
+    // Add a total of 5 markers
+    let i = 0 - totalDays;
+    for (; i <= 0; i += Math.floor(totalDays / 5)) {
+      newSliderMarks.push({
+        value: i,
+        label: dateToShortTitle(newDateWithOffset(endDate, i)),
+      });
+    }
+    setSliderMarks(newSliderMarks);
+  };
+
   const recalculateNewCases = () => {
-    const todayTitle = data.most_recent_date;
-    if (!todayTitle) {
+    if (!currentDate) {
       return;
     }
     const updatedNewCases = DEFAULT_NEW_CASES;
     ['confirmed', 'deaths'].forEach(caseType => {
-      const dataToday = data[caseType][todayTitle];
-      const dataYesterday = data[caseType][prevDateTitle(todayTitle)];
+      const dataToday = data[caseType][currentDate];
+      const dataYesterday = data[caseType][prevDateTitle(currentDate)];
+      if (!dataToday) {
+        updatedNewCases[caseType] = getAllZeroCases(caseType);
+        return;
+      }
+      if (!dataYesterday) {
+        updatedNewCases[caseType] = dataToday;
+        return;
+      }
       Object.keys(dataToday).forEach(fips => {
         if (!fips || !/^\d+$/.test(fips)) {
           return;
@@ -368,6 +437,14 @@ function CovidMap({
     return geoId;
   };
 
+  const handleSliderChange = (event, newValue) => {
+    onChangeCurrentDate(
+      dateToTitle(
+        newDateWithOffset(titleToDate(data.most_recent_date), newValue),
+      ),
+    );
+  };
+
   recalculateBounds(data);
 
   if (zoomLevelIsCountry(zoomState) && colorMapPerCapita) {
@@ -376,7 +453,17 @@ function CovidMap({
     caption = '';
   }
 
-  return (
+  const getValueText = value => {
+    if (!data || !data.most_recent_date) {
+      return '0/0';
+    }
+    const d = newDateWithOffset(titleToDate(data.most_recent_date), value);
+    return mostRecentDate ? dateToShortTitle(d) : '0/0';
+  };
+
+  return !currentDate ? (
+    <div />
+  ) : (
     <div>
       <CenteredSection>
         <ReactTooltip html>{tooltipContent}</ReactTooltip>
@@ -400,18 +487,31 @@ function CovidMap({
           </ZoomableGroup>
         </ComposableMap>
       </CenteredSection>
+      <Slider
+        defaultValue={0}
+        getAriaValueText={getValueText}
+        valueLabelFormat={getValueText}
+        aria-labelledby="discrete-slider-always"
+        marks={sliderMarks}
+        valueLabelDisplay="on"
+        max={0}
+        min={sliderMarks && sliderMarks.length > 0 ? sliderMarks[0].value : 0}
+        onChange={handleSliderChange}
+      />
     </div>
   );
 }
 
 CovidMap.propTypes = {
   data: PropTypes.any,
+  currentDate: PropTypes.oneOfType(PropTypes.string, PropTypes.bool),
   searchWith: PropTypes.string,
   colorMapBy: PropTypes.oneOf(['confirmed', 'deaths']),
   colorMapNewCases: PropTypes.bool,
   colorMapPerCapita: PropTypes.bool,
   zoomState: PropTypes.any,
   onUpdateZoomState: PropTypes.func,
+  onChangeCurrentDate: PropTypes.func,
 };
 
 export default CovidMap;

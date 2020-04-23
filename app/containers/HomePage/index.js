@@ -12,6 +12,7 @@ import { compose } from 'redux';
 import { useLocation } from 'react-router-dom';
 
 import { Grid } from '@material-ui/core';
+import { makeStyles } from '@material-ui/core/styles';
 import { useInjectSaga } from 'utils/injectSaga';
 import { useInjectReducer } from 'utils/injectReducer';
 import { Helmet } from 'react-helmet';
@@ -31,6 +32,7 @@ import {
   makeSelectHomeColorMapPerCapita,
   makeSelectHomeZoomState,
   makeSelectHomeColorMapNewCases,
+  makeSelectHomeCurrentDate,
 } from './selectors';
 import {
   changeSearchWith,
@@ -38,12 +40,18 @@ import {
   changeColorMapPerCapita,
   updateZoomState,
   changeColorMapNewCases,
+  changeCurrentDate,
 } from './actions';
 import { clearStateDialog } from '../../utils/dialogState';
 import CovidMap from '../../components/CovidMap';
 import CovidPlot from '../../components/CovidPlot';
 
 const key = 'homePage';
+const useStyles = makeStyles(theme => ({
+  grow: {
+    flexGrow: 1,
+  },
+}));
 
 export function HomePage({
   loading,
@@ -54,17 +62,20 @@ export function HomePage({
   colorMapPerCapita,
   colorMapNewCases,
   zoomState,
+  currentDate,
   onClickDialogOk,
   onChangeSearchWith,
   onChangeColorMapBy,
   onChangeColorMapPerCapita,
   onChangeColorMapNewCases,
   onUpdateZoomState,
+  onChangeCurrentDate,
 }) {
   const [data, setData] = React.useState({});
   const location = useLocation();
   useInjectReducer({ key, reducer });
   useInjectSaga({ key, saga });
+  const classes = useStyles();
 
   // 268689 is phone number code of the word county
   const zoomWithCountyHashPrefix = 2.0268689;
@@ -119,6 +130,7 @@ export function HomePage({
         .then(d => {
           setData(d);
           checkForCountyHash(d);
+          onChangeCurrentDate(d.most_recent_date);
         });
     } catch (error) {
       // TODO Show alert here
@@ -169,12 +181,14 @@ export function HomePage({
 
   const covidMapProps = {
     data,
+    currentDate,
     zoomState,
     searchWith,
     colorMapBy,
     colorMapPerCapita,
     colorMapNewCases,
     onUpdateZoomState,
+    onChangeCurrentDate,
   };
 
   const covidPlotProps = {
@@ -192,8 +206,16 @@ export function HomePage({
         <CenteredSection>
           <YouQuizTopBar {...youQuizTopBarProps} />
           <Grid container spacing={3}>
-            <Grid item xs={12} md={4}>
-              <CovidMap {...covidMapProps} />
+            <Grid container item xs={12} md={4}>
+              <Grid item>
+                <div className={classes.grow} />
+              </Grid>
+              <Grid item>
+                <CovidMap {...covidMapProps} />
+              </Grid>
+              <Grid item>
+                <div className={classes.grow} />
+              </Grid>
             </Grid>
             <Grid item xs={12} md={8}>
               <CovidPlot {...covidPlotProps} />
@@ -211,6 +233,7 @@ HomePage.propTypes = {
   successMessage: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
   errorMessage: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
   searchWith: PropTypes.string,
+  currentDate: PropTypes.oneOfType(PropTypes.string, PropTypes.bool),
   colorMapBy: PropTypes.oneOf(['confirmed', 'deaths']),
   colorMapPerCapita: PropTypes.bool,
   colorMapNewCases: PropTypes.bool,
@@ -221,6 +244,7 @@ HomePage.propTypes = {
   onChangeColorMapPerCapita: PropTypes.func,
   onChangeColorMapNewCases: PropTypes.func,
   onUpdateZoomState: PropTypes.func,
+  onChangeCurrentDate: PropTypes.func,
 };
 
 const mapStateToProps = createStructuredSelector({
@@ -228,6 +252,7 @@ const mapStateToProps = createStructuredSelector({
   successMessage: makeSelectHomeSuccessMessage(),
   errorMessage: makeSelectHomeErrorMessage(),
   searchWith: makeSelectHomeSearchWith(),
+  currentDate: makeSelectHomeCurrentDate(),
   colorMapBy: makeSelectHomeColorMapBy(),
   colorMapPerCapita: makeSelectHomeColorMapPerCapita(),
   colorMapNewCases: makeSelectHomeColorMapNewCases(),
@@ -253,6 +278,9 @@ function mapDispatchToProps(dispatch) {
     },
     onUpdateZoomState: zoomState => {
       dispatch(updateZoomState(zoomState));
+    },
+    onChangeCurrentDate: newCurrentDate => {
+      dispatch(changeCurrentDate(newCurrentDate));
     },
   };
 }

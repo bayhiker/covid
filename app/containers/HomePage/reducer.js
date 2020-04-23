@@ -14,6 +14,7 @@ import {
   GEO_JSON_URL_COUNTIES,
   GEO_JSON_URL_STATES,
   CHANGE_COLOR_MAP_NEW_CASES,
+  CHANGE_CURRENT_DATE,
 } from './constants';
 import { config } from '../../constants';
 import {
@@ -32,6 +33,7 @@ export const initialState = getDialogInitialState({
   colorMapNewCases: false,
   // Data to be dynamically loaded from server
   data: {},
+  currentDate: false,
   zoomState: {
     zoom: 1,
     // Must set to somewhere within the US, otherwise you'll get "null" errors:
@@ -108,6 +110,9 @@ const homePageReducer = (state = initialState, action) =>
           `zoomState updated to ${JSON.stringify(draft.userData.zoomState)}`,
         );
         */
+        break;
+      case CHANGE_CURRENT_DATE:
+        draft.userData.currentDate = action.currentDate;
         break;
     }
   });
