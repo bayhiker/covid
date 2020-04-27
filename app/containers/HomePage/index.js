@@ -47,7 +47,7 @@ import CovidMap from '../../components/CovidMap';
 import CovidPlot from '../../components/CovidPlot';
 
 const key = 'homePage';
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles(() => ({
   grow: {
     flexGrow: 1,
   },

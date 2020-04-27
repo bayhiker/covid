@@ -2,10 +2,11 @@
  * Tests for regression.js
  */
 
-import LogisticRegression from 'ml-logistic-regression';
-import { logit } from '../regression';
+// import LogisticRegression from 'ml-logistic-regression';
+// import { logit } from '../regression';
 
 describe('regression', () => {
+  /*
   it('Test logit regression', () => {
     const timeSeries = {
       '1/22/20': 1,
@@ -171,4 +172,5 @@ describe('regression', () => {
     // we try to predict the test set
     const finalResults = logreg.predict(Xtest);
   });
+  */
 });

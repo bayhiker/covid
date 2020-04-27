@@ -14,12 +14,7 @@ import {
   Divider,
 } from '@material-ui/core';
 import PropTypes from 'prop-types';
-import {
-  SchoolOutlined,
-  LocalHospital,
-  GitHub,
-  StorageOutlined,
-} from '@material-ui/icons';
+import { SchoolOutlined, LocalHospital, GitHub } from '@material-ui/icons';
 import YouQuizPopover from '../YouQuizPopover';
 
 const useStyles = makeStyles(theme => ({

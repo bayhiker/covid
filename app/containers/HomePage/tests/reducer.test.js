@@ -1,4 +1,5 @@
 // import produce from 'immer';
+import { config } from 'constants';
 import homePageReducer from '../reducer';
 // import { someAction } from '../actions';
 
@@ -11,9 +12,20 @@ describe('homePageReducer', () => {
       successMessage: false,
       errorMessage: false,
       userData: {
-        problemsFilter: '',
-        currentProblem: false,
-        problems: false,
+        searchWith: '',
+        colorMapBy: 'deaths',
+        colorMapPerCapita: false,
+        colorMapNewCases: false,
+        // Data to be dynamically loaded from server
+        data: {},
+        currentDate: false,
+        zoomState: {
+          zoom: 1,
+          center: [-95.71, 37.09],
+          geoId: '0',
+          geoJsonUrl: 'https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json',
+          dataUrl: `${config.DATA_URL_PREFIX}/0.json`,
+        },
       },
     };
   });

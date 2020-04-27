@@ -133,10 +133,14 @@ const extractDataToPlot = (data, zoomState) => {
   };
 };
 
-const getCasesCharts = (caption, casesDataToPlot) => (
+const getOverviewCharts = (caption, casesDataToPlot) => (
   <div>
     <CenteredSection>
-      <Typography variant="h5">{caption} - Cases</Typography>
+      <Typography variant="h5">{caption} - Overview</Typography>
+      <Typography variant="subtitle2" color="textSecondary">
+        Overview of total confirmed cases/death, new confirmed cases/deaths, and
+        mobility.
+      </Typography>
       <ResponsiveContainer
         width="100%"
         aspect={2.0 / 1.0}
@@ -172,7 +176,71 @@ const getCasesCharts = (caption, casesDataToPlot) => (
             yAxisId="left"
             type="monotone"
             dataKey="mobility"
-            stroke="#EE0"
+            stroke="#BBB"
+          />
+          <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
+          <XAxis dataKey="name" />
+          <YAxis
+            yAxisId="left"
+            orientation="left"
+            label={{
+              value: 'Mobility Index',
+              position: 'insideBottomLeft',
+            }}
+          />
+          <YAxis
+            yAxisId="right"
+            orientation="right"
+            label={{
+              value: 'Cases',
+              position: 'insideBottomRight',
+            }}
+          />
+          <Tooltip />
+          <Legend layout="horizontal" verticalAlign="top" align="center" />
+        </LineChart>
+      </ResponsiveContainer>
+    </CenteredSection>
+  </div>
+);
+
+const getNewCasesCharts = (caption, casesDataToPlot) => (
+  <div>
+    <CenteredSection>
+      <Typography variant="h5">{caption} - New Cases</Typography>
+      <Typography variant="subtitle2" color="textSecondary">
+        New confirmed cases, new deaths, plotted against{' '}
+        <a
+          target="_"
+          href="https://github.com/descarteslabs/DL-COVID-19#field-description"
+        >
+          mobility index
+        </a>
+      </Typography>
+      <ResponsiveContainer
+        width="100%"
+        aspect={2.0 / 1.0}
+        maxHeight={512}
+        minWidth={200}
+      >
+        <LineChart data={casesDataToPlot}>
+          <Line
+            yAxisId="right"
+            type="monotone"
+            dataKey="new confirmed"
+            stroke="#0F0"
+          />
+          <Line
+            yAxisId="right"
+            type="monotone"
+            dataKey="new deaths"
+            stroke="#F00"
+          />
+          <Line
+            yAxisId="left"
+            type="monotone"
+            dataKey="mobility"
+            stroke="#BBB"
           />
           <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
           <XAxis dataKey="name" />
@@ -239,7 +307,7 @@ const getDoublingCharts = (caption, casesDataToPlot) => (
             yAxisId="left"
             type="monotone"
             dataKey="mobility"
-            stroke="#EE0"
+            stroke="#BBB"
           />
           <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
           <XAxis dataKey="name" />
@@ -318,13 +386,17 @@ function CovidPlot({ data, zoomState }) {
         scrollButtons="auto"
         aria-label="scrollable auto tabs example"
       >
-        <Tab label="Cases" {...a11yProps(0)} />
-        <Tab label="Doubling" {...a11yProps(1)} />
+        <Tab label="Overview" {...a11yProps(0)} />
+        <Tab label="New Cases" {...a11yProps(1)} />
+        <Tab label="Doubling" {...a11yProps(2)} />
       </Tabs>
       <TabPanel value={value} index={0}>
-        {getCasesCharts(caption, casesDataToPlot)}
+        {getOverviewCharts(caption, casesDataToPlot)}
       </TabPanel>
       <TabPanel value={value} index={1}>
+        {getNewCasesCharts(caption, casesDataToPlot)}
+      </TabPanel>
+      <TabPanel value={value} index={2}>
         {getDoublingCharts(caption, casesDataToPlot)}
       </TabPanel>
     </div>
