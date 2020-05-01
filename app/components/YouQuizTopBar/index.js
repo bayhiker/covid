@@ -12,20 +12,11 @@ import {
   AppBar,
   IconButton,
   Typography,
-  Menu,
-  MenuItem,
-  FormControl,
-  FormControlLabel,
-  Switch,
-  FormLabel,
-  RadioGroup,
-  Radio,
   Tooltip,
   Paper,
   Link,
 } from '@material-ui/core';
 import { Favorite, Storage } from '@material-ui/icons';
-import MoreIcon from '@material-ui/icons/MoreVert';
 import ForumIcon from '@material-ui/icons/Forum';
 
 import CovidTable from '../CovidTable';
@@ -96,112 +87,11 @@ const useStyles = makeStyles(theme => ({
       width: '20ch',
     },
   },
-  sectionDesktop: {
-    display: 'none',
-    [theme.breakpoints.up('md')]: {
-      display: 'flex',
-    },
-  },
-  sectionMobile: {
-    display: 'flex',
-    [theme.breakpoints.up('md')]: {
-      display: 'none',
-    },
-  },
 }));
 
 function YouQuizTopBar(props) {
-  const {
-    data,
-    zoomState,
-    searchWith,
-    colorMapBy,
-    colorMapPerCapita,
-    colorMapNewCases,
-    onChangeSearchWith,
-    onChangeColorMapBy,
-    onChangeColorMapPerCapita,
-    onChangeColorMapNewCases,
-  } = props;
+  const { data, zoomState, searchWith, onChangeSearchWith } = props;
   const classes = useStyles();
-
-  const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState(null);
-
-  const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
-
-  const handleMobileMenuClose = () => {
-    setMobileMoreAnchorEl(null);
-  };
-
-  const handleMobileMenuOpen = event => {
-    setMobileMoreAnchorEl(event.currentTarget);
-  };
-
-  const colorMapByRadioGroup = (
-    <FormControl component="fieldset">
-      <FormLabel component="legend">Color Map By</FormLabel>
-      <RadioGroup
-        row
-        aria-label="position"
-        name="colorMapBy"
-        value={colorMapBy}
-        defaultValue="confirmed"
-        onChange={onChangeColorMapBy}
-      >
-        <FormControlLabel
-          value="confirmed"
-          control={<Radio color="primary" />}
-          label={
-            <Typography className={classes.blackText}>Confirmed</Typography>
-          }
-        />
-        <FormControlLabel
-          value="deaths"
-          control={<Radio color="primary" />}
-          label={<Typography className={classes.blackText}>Deaths</Typography>}
-        />
-      </RadioGroup>
-    </FormControl>
-  );
-  const colorMapPerCapitaSwitch = (
-    <FormControlLabel
-      value="per-capita"
-      control={
-        <Switch color="secondary" onChange={onChangeColorMapPerCapita} />
-      }
-      checked={colorMapPerCapita}
-      classes={classes.perCapitaSwitch}
-      label={<Typography className={classes.blackText}>Per Capita</Typography>}
-      labelPlacement="start"
-    />
-  );
-  const colorMapNewCasesSwitch = (
-    <FormControlLabel
-      value="new-cases"
-      control={<Switch color="secondary" onChange={onChangeColorMapNewCases} />}
-      checked={colorMapNewCases}
-      classes={classes.newCasesSwitch}
-      label={<Typography className={classes.blackText}>New Cases</Typography>}
-      labelPlacement="start"
-    />
-  );
-
-  const mobileMenuId = 'primary-search-account-menu-mobile';
-  const renderMobileMenu = (
-    <Menu
-      anchorEl={mobileMoreAnchorEl}
-      anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-      id={mobileMenuId}
-      keepMounted
-      transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-      open={isMobileMenuOpen}
-      onClose={handleMobileMenuClose}
-    >
-      <MenuItem>{colorMapByRadioGroup}</MenuItem>
-      <MenuItem>{colorMapNewCasesSwitch}</MenuItem>
-      <MenuItem>{colorMapPerCapitaSwitch}</MenuItem>
-    </Menu>
-  );
 
   const covidTableProps = {
     data,
@@ -215,13 +105,6 @@ function YouQuizTopBar(props) {
           <Typography className={classes.title} variant="h6" noWrap>
             COVID-19
           </Typography>
-          <div className={classes.grow} />
-          <div className={classes.sectionDesktop}>
-            {colorMapByRadioGroup}
-            <div className={classes.grow} />
-            {colorMapNewCasesSwitch}
-            {colorMapPerCapitaSwitch}
-          </div>
           <div className={classes.grow} />
           <div>
             <CovidTable {...covidTableProps}>
@@ -252,23 +135,11 @@ function YouQuizTopBar(props) {
               </Tooltip>
             </CovidThanks>
           </div>
-          <div className={classes.sectionMobile}>
-            <IconButton
-              aria-label="show more"
-              aria-controls={mobileMenuId}
-              aria-haspopup="true"
-              onClick={handleMobileMenuOpen}
-              color="inherit"
-            >
-              <MoreIcon />
-            </IconButton>
-          </div>
         </Toolbar>
       </AppBar>
       <Paper>
         <div className={classes.toolbar} />
       </Paper>
-      {renderMobileMenu}
     </div>
   );
 }
@@ -281,9 +152,6 @@ YouQuizTopBar.propTypes = {
   data: PropTypes.any,
   zoomState: PropTypes.any,
   onChangeSearchWith: PropTypes.func,
-  onChangeColorMapBy: PropTypes.func,
-  onChangeColorMapPerCapita: PropTypes.func,
-  onChangeColorMapNewCases: PropTypes.func,
 };
 
 export default YouQuizTopBar;

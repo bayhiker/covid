@@ -170,13 +170,7 @@ export function HomePage({
     data,
     zoomState,
     searchWith,
-    colorMapBy,
-    colorMapPerCapita,
-    colorMapNewCases,
     onChangeSearchWith,
-    onChangeColorMapBy,
-    onChangeColorMapPerCapita,
-    onChangeColorMapNewCases,
   };
 
   const covidMapProps = {
@@ -189,6 +183,9 @@ export function HomePage({
     colorMapNewCases,
     onUpdateZoomState,
     onChangeCurrentDate,
+    onChangeColorMapBy,
+    onChangeColorMapPerCapita,
+    onChangeColorMapNewCases,
   };
 
   const covidPlotProps = {

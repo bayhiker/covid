@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 // import styled from 'styled-components';
 
+import MoreIcon from '@material-ui/icons/MoreVert';
 import {
   ComposableMap,
   Geographies,
@@ -13,7 +14,21 @@ import {
 import { scaleQuantize } from 'd3-scale';
 import { geoCentroid } from 'd3';
 import ReactTooltip from 'react-tooltip';
-import { Typography, Slider } from '@material-ui/core';
+import {
+  Typography,
+  Slider,
+  makeStyles,
+  Toolbar,
+  FormControl,
+  FormControlLabel,
+  Switch,
+  Menu,
+  MenuItem,
+  IconButton,
+  FormLabel,
+  RadioGroup,
+  Radio,
+} from '@material-ui/core';
 
 import {
   usStates,
@@ -74,6 +89,24 @@ const DEFAULT_NEW_CASES = {
   },
 }; // New cases on most recent date
 
+const useStyles = makeStyles(theme => ({
+  grow: {
+    flexGrow: 1,
+  },
+  sectionDesktop: {
+    display: 'none',
+    [theme.breakpoints.up('md')]: {
+      display: 'flex',
+    },
+  },
+  sectionMobile: {
+    display: 'flex',
+    [theme.breakpoints.up('md')]: {
+      display: 'none',
+    },
+  },
+}));
+
 function CovidMap({
   data,
   currentDate,
@@ -84,7 +117,11 @@ function CovidMap({
   colorMapNewCases,
   onUpdateZoomState,
   onChangeCurrentDate,
+  onChangeColorMapBy,
+  onChangeColorMapPerCapita,
+  onChangeColorMapNewCases,
 }) {
+  const classes = useStyles();
   const [tooltipContent, setTooltipContent] = React.useState('');
   const [newCases, setNewCases] = React.useState(DEFAULT_NEW_CASES);
   const [mostRecentDate, setMostRecentDate] = React.useState();
@@ -461,12 +498,112 @@ function CovidMap({
     return mostRecentDate ? dateToShortTitle(d) : '0/0';
   };
 
+  const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState(null);
+
+  const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
+
+  const handleMobileMenuClose = () => {
+    setMobileMoreAnchorEl(null);
+  };
+
+  const handleMobileMenuOpen = event => {
+    setMobileMoreAnchorEl(event.currentTarget);
+  };
+
+  const colorMapByRadioGroup = (
+    <FormControl component="fieldset">
+      <FormLabel component="legend">Color Map By</FormLabel>
+      <RadioGroup
+        row
+        aria-label="position"
+        name="colorMapBy"
+        value={colorMapBy}
+        defaultValue="confirmed"
+        onChange={onChangeColorMapBy}
+      >
+        <FormControlLabel
+          value="confirmed"
+          control={<Radio color="primary" />}
+          label={
+            <Typography className={classes.blackText}>Confirmed</Typography>
+          }
+        />
+        <FormControlLabel
+          value="deaths"
+          control={<Radio color="primary" />}
+          label={<Typography className={classes.blackText}>Deaths</Typography>}
+        />
+      </RadioGroup>
+    </FormControl>
+  );
+  const colorMapPerCapitaSwitch = (
+    <FormControlLabel
+      value="per-capita"
+      control={
+        <Switch color="secondary" onChange={onChangeColorMapPerCapita} />
+      }
+      checked={colorMapPerCapita}
+      classes={classes.perCapitaSwitch}
+      label={<Typography className={classes.blackText}>Per Capita</Typography>}
+      labelPlacement="start"
+    />
+  );
+  const colorMapNewCasesSwitch = (
+    <FormControlLabel
+      value="new-cases"
+      control={<Switch color="secondary" onChange={onChangeColorMapNewCases} />}
+      checked={colorMapNewCases}
+      classes={classes.newCasesSwitch}
+      label={<Typography className={classes.blackText}>New Cases</Typography>}
+      labelPlacement="start"
+    />
+  );
+
+  const mobileMenuId = 'primary-search-account-menu-mobile';
+  const renderMobileMenu = (
+    <Menu
+      anchorEl={mobileMoreAnchorEl}
+      anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      id={mobileMenuId}
+      keepMounted
+      transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+      open={isMobileMenuOpen}
+      onClose={handleMobileMenuClose}
+    >
+      <MenuItem>{colorMapByRadioGroup}</MenuItem>
+      <MenuItem>{colorMapNewCasesSwitch}</MenuItem>
+      <MenuItem>{colorMapPerCapitaSwitch}</MenuItem>
+    </Menu>
+  );
+
   return !currentDate ? (
     <div />
   ) : (
     <div>
       <CenteredSection>
         <ReactTooltip html>{tooltipContent}</ReactTooltip>
+        <div className={classes.grow}>
+          <Toolbar>
+            <div className={classes.sectionDesktop}>
+              {colorMapByRadioGroup}
+              <div className={classes.grow} />
+              {colorMapNewCasesSwitch}
+              {colorMapPerCapitaSwitch}
+            </div>
+            <div className={classes.sectionMobile}>
+              <IconButton
+                aria-label="show more"
+                aria-controls={mobileMenuId}
+                aria-haspopup="true"
+                onClick={handleMobileMenuOpen}
+                color="inherit"
+              >
+                <MoreIcon />
+              </IconButton>
+            </div>
+          </Toolbar>
+          {renderMobileMenu}
+        </div>
         <Typography variant="h4">{caption}</Typography>
         <ComposableMap data-tip="" projection="geoAlbersUsa">
           <ZoomableGroup
@@ -512,6 +649,9 @@ CovidMap.propTypes = {
   zoomState: PropTypes.any,
   onUpdateZoomState: PropTypes.func,
   onChangeCurrentDate: PropTypes.func,
+  onChangeColorMapBy: PropTypes.func,
+  onChangeColorMapPerCapita: PropTypes.func,
+  onChangeColorMapNewCases: PropTypes.func,
 };
 
 export default CovidMap;

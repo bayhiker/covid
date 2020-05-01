@@ -138,8 +138,15 @@ const getOverviewCharts = (caption, casesDataToPlot) => (
     <CenteredSection>
       <Typography variant="h5">{caption} - Overview</Typography>
       <Typography variant="subtitle2" color="textSecondary">
-        Overview of total confirmed cases/death, new confirmed cases/deaths, and
-        mobility.
+        Overview of total confirmed cases/deaths, new confirmed cases/deaths,
+        and{' '}
+        <a
+          target="_"
+          href="https://github.com/descarteslabs/DL-COVID-19#field-description"
+        >
+          mobility index
+        </a>
+        .
       </Typography>
       <ResponsiveContainer
         width="100%"
