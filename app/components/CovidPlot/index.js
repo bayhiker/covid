@@ -1,9 +1,3 @@
-/**
- *
- * CovidPlot
- *
- */
-
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Typography, Tabs, Tab, Box, makeStyles } from '@material-ui/core';
@@ -16,18 +10,17 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  ReferenceLine,
+  Label,
 } from 'recharts';
-import {
-  titleToDate,
-  dateToTitle,
-  dateToShortTitle,
-} from '../../utils/dateUtils';
-import {
-  zoomLevelIsCounty,
-  zoomLevelIsState,
-  usStates,
-} from '../../utils/mapUtils';
 import { CenteredSection } from '../../utils/styledUtil';
+import {
+  getNewCasesDataKey,
+  getDoublingDataKey,
+  getRollingAverageDataKey,
+  rollingDaysRadius,
+  extractDataToPlot,
+} from './data';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -37,106 +30,10 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const getDoublingDataKey = caseType => `${caseType} doubled every(days)`;
-
-const extractDataToPlot = (data, zoomState) => {
-  const casesDataToPlot = [];
-  let caption = 'United State';
-
-  if (!data || !data.most_recent_date) {
-    return {
-      caption,
-      casesDataToPlot,
-    };
-  }
-  const startDate = titleToDate(data.least_recent_date);
-  const endDate = titleToDate(data.most_recent_date);
-
-  const countyLevel = zoomLevelIsCounty(zoomState);
-  const { geoId } = zoomState;
-
-  if (countyLevel) {
-    caption = `${data.names[geoId]} County`;
-  } else if (zoomLevelIsState(zoomState)) {
-    caption = usStates[geoId.substring(0, 2)].name;
-  }
-
-  const timeSeriesConfirmed = data.confirmed.time_series;
-  const timeSeriesDeaths = data.deaths.time_series;
-  const timeSeriesMobility = data.mobility.time_series;
-
-  let prevTotalDeaths = 0;
-  let prevTotalConfirmed = 0;
-  let prevMobility = -1;
-  let firstValidMobilityFound = false;
-  const doubledSinceIndex = { confirmed: 0, deaths: 0 };
-  let currentTotalCases = {};
-  let currentDataPoint = {};
-  const searchForDoubled = (caseType, minCases) => {
-    if (currentTotalCases[caseType] < minCases) {
-      return;
-    }
-    while (
-      doubledSinceIndex[caseType] < casesDataToPlot.length - 1 &&
-      casesDataToPlot[doubledSinceIndex[caseType]][caseType] <
-        currentTotalCases[caseType] / 2
-    ) {
-      doubledSinceIndex[caseType] += 1;
-    }
-    currentDataPoint[getDoublingDataKey(caseType)] =
-      casesDataToPlot.length - doubledSinceIndex[caseType];
-  };
-  for (let d = startDate; d <= endDate; d.setDate(d.getDate() + 1)) {
-    const seriesKey = dateToTitle(d);
-    currentTotalCases = {};
-    currentTotalCases.confirmed = countyLevel
-      ? data.confirmed[seriesKey][geoId]
-      : timeSeriesConfirmed[seriesKey];
-    currentTotalCases.deaths = countyLevel
-      ? data.deaths[seriesKey][geoId]
-      : timeSeriesDeaths[seriesKey];
-    const mobility = countyLevel
-      ? data.mobility[seriesKey][geoId]
-      : timeSeriesMobility[seriesKey];
-    currentDataPoint = {
-      name: dateToShortTitle(d),
-      confirmed: currentTotalCases.confirmed,
-      deaths: currentTotalCases.deaths,
-      'new confirmed': currentTotalCases.confirmed - prevTotalConfirmed,
-      'new deaths': currentTotalCases.deaths - prevTotalDeaths,
-    };
-    if (
-      !firstValidMobilityFound &&
-      prevMobility !== -1 &&
-      prevMobility !== mobility
-    ) {
-      firstValidMobilityFound = true;
-    }
-
-    if (firstValidMobilityFound) {
-      currentDataPoint.mobility = mobility;
-    }
-
-    // Calculate and filled doubled in x days
-    searchForDoubled('confirmed', 63);
-    searchForDoubled('deaths', 5);
-
-    casesDataToPlot.push(currentDataPoint);
-    prevTotalConfirmed = currentTotalCases.confirmed;
-    prevTotalDeaths = currentTotalCases.deaths;
-    prevMobility = mobility;
-  }
-
-  return {
-    caption,
-    casesDataToPlot,
-  };
-};
-
-const getOverviewCharts = (caption, casesDataToPlot) => (
+const getOverviewCharts = (metaData, casesDataToPlot) => (
   <div>
     <CenteredSection>
-      <Typography variant="h5">{caption} - Overview</Typography>
+      <Typography variant="h5">{metaData.caption} - Overview</Typography>
       <Typography variant="subtitle2" color="textSecondary">
         Overview of total confirmed cases/deaths, new confirmed cases/deaths,
         and{' '}
@@ -164,7 +61,7 @@ const getOverviewCharts = (caption, casesDataToPlot) => (
           <Line
             yAxisId="right"
             type="monotone"
-            dataKey="new confirmed"
+            dataKey={getNewCasesDataKey('confirmed')}
             stroke="#0F0"
           />
           <Line
@@ -176,7 +73,7 @@ const getOverviewCharts = (caption, casesDataToPlot) => (
           <Line
             yAxisId="right"
             type="monotone"
-            dataKey="new deaths"
+            dataKey={getNewCasesDataKey('deaths')}
             stroke="#F00"
           />
           <Line
@@ -211,10 +108,10 @@ const getOverviewCharts = (caption, casesDataToPlot) => (
   </div>
 );
 
-const getNewCasesCharts = (caption, casesDataToPlot) => (
+const getNewCasesCharts = (metaData, casesDataToPlot) => (
   <div>
     <CenteredSection>
-      <Typography variant="h5">{caption} - New Cases</Typography>
+      <Typography variant="h5">{metaData.caption} - New Cases</Typography>
       <Typography variant="subtitle2" color="textSecondary">
         New confirmed cases, new deaths, plotted against{' '}
         <a
@@ -275,10 +172,12 @@ const getNewCasesCharts = (caption, casesDataToPlot) => (
   </div>
 );
 
-const getDoublingCharts = (caption, casesDataToPlot) => (
+const getDoublingCharts = (metaData, casesDataToPlot) => (
   <div>
     <CenteredSection>
-      <Typography variant="h5">{caption} - Doubling Every x Days</Typography>
+      <Typography variant="h5">
+        {metaData.caption} - Doubling Every x Days
+      </Typography>
       <Typography variant="subtitle2" color="textSecondary">
         Cases doubled since x days ago. COVID-19 patient are on average
         hospitalized for{' '}
@@ -343,6 +242,99 @@ const getDoublingCharts = (caption, casesDataToPlot) => (
   </div>
 );
 
+const getRollingCharts = (metaData, casesDataToPlot) => (
+  <div>
+    <CenteredSection>
+      <Typography variant="h5">
+        {metaData.caption} - New Cases {2 * rollingDaysRadius + 1}-day Centered
+        Rolling Average{' '}
+      </Typography>
+      <Typography variant="subtitle2" color="textSecondary">
+        <a
+          href="https://www.itl.nist.gov/div898/handbook/pmc/section4/pmc422.htm"
+          target="_"
+        >
+          Centered Rolling Average
+        </a>{' '}
+        of new cases. According to guidelines, among other conditions, a place
+        should not reopen before 2 weeks of downward trend of new cases.
+      </Typography>
+      <ResponsiveContainer
+        width="100%"
+        aspect={2.0 / 1.0}
+        maxHeight={512}
+        minWidth={200}
+      >
+        <LineChart data={casesDataToPlot}>
+          <Line
+            yAxisId="right"
+            type="monotone"
+            dataKey={getRollingAverageDataKey('confirmed')}
+            stroke="#00F"
+          />
+          <Line
+            yAxisId="right"
+            type="monotone"
+            dataKey={getRollingAverageDataKey('deaths')}
+            stroke="#F00"
+          />
+          <Line
+            yAxisId="left"
+            type="monotone"
+            dataKey="mobility"
+            stroke="#BBB"
+          />
+          <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
+          <XAxis dataKey="name" />
+          <YAxis
+            yAxisId="right"
+            orientation="right"
+            label={{
+              value: 'Days',
+              position: 'insideBottomRight',
+            }}
+            allowDecimals
+          />
+          <YAxis
+            yAxisId="left"
+            orientation="left"
+            label={{
+              value: 'Mobility Index',
+              position: 'insideBottomLeft',
+            }}
+          />
+          <Tooltip />
+          <Legend layout="horizontal" verticalAlign="top" align="center" />
+          <ReferenceLine
+            yAxisId="right"
+            x={metaData.references.rollingAverageTrendStart.confirmed}
+            stroke="#00F"
+            label={{
+              value: `Downward trend since ${
+                metaData.references.rollingAverageTrendDuration.confirmed
+              } days ago`,
+              angle: -90,
+              position: 'right',
+            }}
+          />
+          <ReferenceLine
+            yAxisId="right"
+            x={metaData.references.rollingAverageTrendStart.deaths}
+            stroke="#F00"
+            label={{
+              value: `Downward trend since ${
+                metaData.references.rollingAverageTrendDuration.deaths
+              } days ago`,
+              angle: -90,
+              position: 'left',
+            }}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </CenteredSection>
+  </div>
+);
+
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
 
@@ -380,7 +372,7 @@ function CovidPlot({ data, zoomState }) {
   const handleChange = (event, newValue) => {
     setValue(newValue);
   };
-  const { caption, casesDataToPlot } = extractDataToPlot(data, zoomState);
+  const { metaData, casesDataToPlot } = extractDataToPlot(data, zoomState);
 
   return (
     <div className={classes.root}>
@@ -396,15 +388,19 @@ function CovidPlot({ data, zoomState }) {
         <Tab label="Overview" {...a11yProps(0)} />
         <Tab label="New Cases" {...a11yProps(1)} />
         <Tab label="Doubling" {...a11yProps(2)} />
+        <Tab label="Rolling" {...a11yProps(3)} />
       </Tabs>
       <TabPanel value={value} index={0}>
-        {getOverviewCharts(caption, casesDataToPlot)}
+        {getOverviewCharts(metaData, casesDataToPlot)}
       </TabPanel>
       <TabPanel value={value} index={1}>
-        {getNewCasesCharts(caption, casesDataToPlot)}
+        {getNewCasesCharts(metaData, casesDataToPlot)}
       </TabPanel>
       <TabPanel value={value} index={2}>
-        {getDoublingCharts(caption, casesDataToPlot)}
+        {getDoublingCharts(metaData, casesDataToPlot)}
+      </TabPanel>
+      <TabPanel value={value} index={3}>
+        {getRollingCharts(metaData, casesDataToPlot)}
       </TabPanel>
     </div>
   );
