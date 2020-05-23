@@ -121,8 +121,7 @@ export const extractDataToPlot = (data, zoomState) => {
     metaData.references.positiveRateTrendStart = dateToShortTitle(
       newDateWithOffset(startDate, trendStartIndex),
     );
-    metaData.references.positiveRateTrendDuration =
-      totalDays - trendStartIndex + 1;
+    metaData.references.positiveRateTrendDuration = totalDays - trendStartIndex;
   };
 
   for (
