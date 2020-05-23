@@ -94,8 +94,7 @@ const homePageReducer = (state = initialState, action) =>
         draft.userData.searchWith = action.searchWith;
         break;
       case CHANGE_COLOR_MAP_BY:
-        draft.userData.colorMapBy =
-          action.colorMapBy === 'confirmed' ? 'confirmed' : 'deaths';
+        draft.userData.colorMapBy = action.colorMapBy;
         break;
       case CHANGE_COLOR_MAP_PER_CAPITA:
         draft.userData.colorMapPerCapita = action.colorMapPerCapita;

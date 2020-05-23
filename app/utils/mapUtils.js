@@ -260,6 +260,9 @@ export function zoomLevelIsState(zoomState) {
 }
 
 export function zoomLevelIsCounty(zoomState) {
+  console.log(
+    `In zoomLevelIsCounty(), getZoomLevel() is ${getZoomLevel(zoomState)}`,
+  );
   return getZoomLevel(zoomState) === 'county';
 }
 

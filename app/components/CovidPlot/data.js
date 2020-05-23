@@ -47,6 +47,9 @@ export const extractDataToPlot = (data, zoomState) => {
   const timeSeriesConfirmed = data.confirmed.time_series;
   const timeSeriesDeaths = data.deaths.time_series;
   const timeSeriesMobility = data.mobility.time_series;
+  const timeSeriesSettledCases = data.testing.settled_cases.time_series;
+  const timeSeriesPositiveRate = data.testing.positive_rate.time_series;
+  const timeSeriesPendingCases = data.testing.pending_cases.time_series;
 
   let prevTotalDeaths = 0;
   let prevTotalConfirmed = 0;
@@ -102,7 +105,31 @@ export const extractDataToPlot = (data, zoomState) => {
     metaData.references.rollingAverageTrendDuration[caseType] = trendDuration;
   };
 
-  for (let d = startDate; d <= endDate; d.setDate(d.getDate() + 1)) {
+  const findPositiveRateTrend = () => {
+    if (countyLevel) {
+      return;
+    }
+    const totalDays = casesDataToPlot.length;
+    let trendStartIndex = totalDays - 1;
+    while (
+      trendStartIndex > 0 &&
+      casesDataToPlot[trendStartIndex - 1]['positive rate'] >
+        casesDataToPlot[trendStartIndex]['positive rate']
+    ) {
+      trendStartIndex -= 1;
+    }
+    metaData.references.positiveRateTrendStart = dateToShortTitle(
+      newDateWithOffset(startDate, trendStartIndex),
+    );
+    metaData.references.positiveRateTrendDuration =
+      totalDays - trendStartIndex + 1;
+  };
+
+  for (
+    let d = new Date(startDate.getTime()); // new Date So we don't unintentionaly change startDate
+    d <= endDate;
+    d.setDate(d.getDate() + 1)
+  ) {
     const seriesKey = dateToTitle(d);
     currentTotalCases = {};
     currentTotalCases.confirmed = countyLevel
@@ -134,6 +161,11 @@ export const extractDataToPlot = (data, zoomState) => {
     if (firstValidMobilityFound) {
       currentDataPoint.mobility = mobility;
     }
+    if (!countyLevel) {
+      currentDataPoint['total tests'] = timeSeriesSettledCases[seriesKey];
+      currentDataPoint['positive rate'] = timeSeriesPositiveRate[seriesKey];
+      currentDataPoint['pending cases'] = timeSeriesPendingCases[seriesKey];
+    }
 
     // Calculate and filled doubled in x days
     searchForDoubled('confirmed', 63);
@@ -147,6 +179,8 @@ export const extractDataToPlot = (data, zoomState) => {
   // Calculate rolling averages for new cases
   calculateRollingAverage('confirmed');
   calculateRollingAverage('deaths');
+  // Calculate positive rate downward trend start date and duration
+  findPositiveRateTrend();
 
   return {
     metaData,

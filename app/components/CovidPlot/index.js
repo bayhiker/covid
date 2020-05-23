@@ -21,6 +21,7 @@ import {
   rollingDaysRadius,
   extractDataToPlot,
 } from './data';
+import { zoomLevelIsCounty } from '../../utils/mapUtils';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -334,6 +335,71 @@ const getRollingCharts = (metaData, casesDataToPlot) => (
     </CenteredSection>
   </div>
 );
+const getTestingCharts = (metaData, casesDataToPlot) => (
+  <div>
+    <CenteredSection>
+      <Typography variant="h5"> {metaData.caption} - Testings </Typography>
+      <Typography variant="subtitle2" color="textSecondary">
+        Total number of settled tests, and percentage of positive cases in all
+        settled tests.
+      </Typography>
+      <ResponsiveContainer
+        width="100%"
+        aspect={2.0 / 1.0}
+        maxHeight={512}
+        minWidth={200}
+      >
+        <LineChart data={casesDataToPlot}>
+          <Line
+            yAxisId="right"
+            type="monotone"
+            dataKey="total tests"
+            stroke="#00F"
+          />
+          <Line
+            yAxisId="left"
+            type="monotone"
+            dataKey="positive rate"
+            stroke="#F00"
+          />
+          <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
+          <XAxis dataKey="name" />
+          <YAxis
+            yAxisId="left"
+            orientation="left"
+            label={{
+              value: 'Postive Rate',
+              position: 'insideBottomRight',
+            }}
+            allowDecimals
+          />
+          <YAxis
+            yAxisId="right"
+            orientation="right"
+            label={{
+              value: 'Tests',
+              position: 'insideBottomLeft',
+            }}
+          />
+          <Tooltip />
+          <Legend layout="horizontal" verticalAlign="top" align="center" />
+          <ReferenceLine
+            yAxisId="left"
+            x={metaData.references.positiveRateTrendStart}
+            stroke="#00F"
+            label={{
+              value: `${
+                metaData.references.positiveRateTrendDuration
+              } days ago`,
+              angle: -90,
+              position: 'right',
+            }}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </CenteredSection>
+  </div>
+);
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -374,6 +440,8 @@ function CovidPlot({ data, zoomState }) {
   };
   const { metaData, casesDataToPlot } = extractDataToPlot(data, zoomState);
 
+  const shouldDrawTestingTab = () => zoomState.zoom && zoomState.zoom < 8;
+
   return (
     <div className={classes.root}>
       <Tabs
@@ -389,6 +457,11 @@ function CovidPlot({ data, zoomState }) {
         <Tab label="New Cases" {...a11yProps(1)} />
         <Tab label="Doubling" {...a11yProps(2)} />
         <Tab label="Rolling" {...a11yProps(3)} />
+        {!shouldDrawTestingTab() ? (
+          ''
+        ) : (
+          <Tab label="Testing" {...a11yProps(4)} />
+        )}
       </Tabs>
       <TabPanel value={value} index={0}>
         {getOverviewCharts(metaData, casesDataToPlot)}
@@ -402,6 +475,13 @@ function CovidPlot({ data, zoomState }) {
       <TabPanel value={value} index={3}>
         {getRollingCharts(metaData, casesDataToPlot)}
       </TabPanel>
+      {!shouldDrawTestingTab() ? (
+        ''
+      ) : (
+        <TabPanel value={value} index={4}>
+          {getTestingCharts(metaData, casesDataToPlot)}
+        </TabPanel>
+      )}
     </div>
   );
 }
