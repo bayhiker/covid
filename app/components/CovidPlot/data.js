@@ -113,7 +113,7 @@ export const extractDataToPlot = (data, zoomState) => {
     let trendStartIndex = totalDays - 1;
     while (
       trendStartIndex > 0 &&
-      casesDataToPlot[trendStartIndex - 1]['positive rate'] >
+      casesDataToPlot[trendStartIndex - 1]['positive rate'] >=
         casesDataToPlot[trendStartIndex]['positive rate']
     ) {
       trendStartIndex -= 1;
