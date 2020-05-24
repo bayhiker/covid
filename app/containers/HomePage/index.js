@@ -125,7 +125,7 @@ export function HomePage({
 
   const loadData = () => {
     try {
-      fetch(zoomState.dataUrl)
+      fetch(zoomState.dataUrl, { compress: true })
         .then(response => response.json())
         .then(d => {
           setData(d);

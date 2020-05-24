@@ -11,7 +11,6 @@ import {
   Legend,
   ResponsiveContainer,
   ReferenceLine,
-  Label,
 } from 'recharts';
 import { CenteredSection } from '../../utils/styledUtil';
 import {
@@ -21,7 +20,6 @@ import {
   rollingDaysRadius,
   extractDataToPlot,
 } from './data';
-import { zoomLevelIsCounty } from '../../utils/mapUtils';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -30,6 +28,16 @@ const useStyles = makeStyles(theme => ({
     backgroundColor: theme.palette.background.paper,
   },
 }));
+
+const formatPercentageTick = value => `${value}%`;
+
+const formatNumericTick = value => {
+  let formattedTick = `${value}`;
+  if (value > 1000) {
+    formattedTick = `${(Math.floor(value / 100) / 10).toLocaleString()}K`;
+  }
+  return formattedTick;
+};
 
 const getOverviewCharts = (metaData, casesDataToPlot) => (
   <div>
@@ -96,6 +104,7 @@ const getOverviewCharts = (metaData, casesDataToPlot) => (
           <YAxis
             yAxisId="right"
             orientation="right"
+            tickFormatter={formatNumericTick}
             label={{
               value: 'Cases',
               position: 'insideBottomRight',
@@ -160,6 +169,7 @@ const getNewCasesCharts = (metaData, casesDataToPlot) => (
           <YAxis
             yAxisId="right"
             orientation="right"
+            tickFormatter={formatNumericTick}
             label={{
               value: 'Cases',
               position: 'insideBottomRight',
@@ -290,8 +300,9 @@ const getRollingCharts = (metaData, casesDataToPlot) => (
           <YAxis
             yAxisId="right"
             orientation="right"
+            tickFormatter={formatNumericTick}
             label={{
-              value: 'Days',
+              value: 'Cases',
               position: 'insideBottomRight',
             }}
             allowDecimals
@@ -367,6 +378,7 @@ const getTestingCharts = (metaData, casesDataToPlot) => (
           <YAxis
             yAxisId="left"
             orientation="left"
+            tickFormatter={formatPercentageTick}
             label={{
               value: 'Postive Rate',
               position: 'insideBottomRight',
@@ -376,6 +388,7 @@ const getTestingCharts = (metaData, casesDataToPlot) => (
           <YAxis
             yAxisId="right"
             orientation="right"
+            tickFormatter={formatNumericTick}
             label={{
               value: 'Tests',
               position: 'insideBottomLeft',
