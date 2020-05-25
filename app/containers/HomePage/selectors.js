@@ -11,7 +11,7 @@ import {
  * Direct selector to the HomePage state domain
  */
 
-const selectHomePageDomain = state => state.homePage || initialState;
+export const selectHomePageDomain = state => state.homePage || initialState;
 
 /**
  * Other specific selectors
@@ -21,48 +21,40 @@ const selectHomePageDomain = state => state.homePage || initialState;
  * Default selector used by HomePage
  */
 
-const makeSelectHomePage = () =>
+export const makeSelectHomePage = () =>
   createSelector(
     selectHomePageDomain,
     substate => substate,
   );
 
-const makeSelectHomeLoading = () => makeSelectLoading(selectHomePageDomain);
+export const makeSelectHomeLoading = () =>
+  makeSelectLoading(selectHomePageDomain);
 
-const makeSelectHomeSuccessMessage = () =>
+export const makeSelectHomeSuccessMessage = () =>
   makeSelectSuccessMessage(selectHomePageDomain);
 
-const makeSelectHomeErrorMessage = () =>
+export const makeSelectHomeErrorMessage = () =>
   makeSelectErrorMessage(selectHomePageDomain);
 
-const makeSelectHomeSearchWith = () =>
+export const makeSelectHomeSearchWith = () =>
   makeSelectUserData(selectHomePageDomain, 'search');
 
-const makeSelectHomeColorMapBy = () =>
+export const makeSelectHomeColorMapBy = () =>
   makeSelectUserData(selectHomePageDomain, 'colorMapBy');
 
-const makeSelectHomeColorMapPerCapita = () =>
+export const makeSelectHomeColorMapPerCapita = () =>
   makeSelectUserData(selectHomePageDomain, 'colorMapPerCapita');
 
-const makeSelectHomeColorMapNewCases = () =>
+export const makeSelectHomeColorMapNewCases = () =>
   makeSelectUserData(selectHomePageDomain, 'colorMapNewCases');
 
-const makeSelectHomeZoomState = () =>
+export const makeSelectHomeZoomState = () =>
   makeSelectUserData(selectHomePageDomain, 'zoomState');
 
-const makeSelectHomeCurrentDate = () =>
+export const makeSelectHomeCurrentDate = () =>
   makeSelectUserData(selectHomePageDomain, 'currentDate');
 
+export const makeSelectHomeCurrentPlotTab = () =>
+  makeSelectUserData(selectHomePageDomain, 'currentPlotTab');
+
 export default makeSelectHomePage;
-export {
-  selectHomePageDomain,
-  makeSelectHomeLoading,
-  makeSelectHomeSuccessMessage,
-  makeSelectHomeErrorMessage,
-  makeSelectHomeSearchWith,
-  makeSelectHomeColorMapBy,
-  makeSelectHomeColorMapPerCapita,
-  makeSelectHomeColorMapNewCases,
-  makeSelectHomeZoomState,
-  makeSelectHomeCurrentDate,
-};

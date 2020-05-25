@@ -15,15 +15,7 @@
  *    }
  */
 
-import {
-  DEFAULT_ACTION,
-  CHANGE_SEARCH_WITH,
-  CHANGE_COLOR_MAP_BY,
-  CHANGE_COLOR_MAP_PER_CAPITA,
-  CHANGE_COLOR_MAP_NEW_CASES,
-  CHANGE_CURRENT_DATE,
-  UPDATE_ZOOM_STATE,
-} from './constants';
+import { DEFAULT_ACTION, UPDATE_USER_STATE } from './constants';
 
 export function defaultAction() {
   return {
@@ -31,47 +23,37 @@ export function defaultAction() {
   };
 }
 
-export function changeSearchWith(searchWith) {
-  return {
-    type: CHANGE_SEARCH_WITH,
-    searchWith,
-  };
+export function updateSearchWith(searchWith) {
+  return updateUserState({ searchWith });
 }
 
-export function changeColorMapBy(colorMapBy) {
-  return {
-    type: CHANGE_COLOR_MAP_BY,
-    colorMapBy,
-  };
+export function updateColorMapBy(colorMapBy) {
+  return updateUserState({ colorMapBy });
 }
 
-export function changeColorMapPerCapita(colorMapPerCapita) {
-  return {
-    type: CHANGE_COLOR_MAP_PER_CAPITA,
-    colorMapPerCapita,
-  };
+export function updateColorMapPerCapita(colorMapPerCapita) {
+  return updateUserState({ colorMapPerCapita });
 }
 
-export function changeColorMapNewCases(colorMapNewCases) {
-  return {
-    type: CHANGE_COLOR_MAP_NEW_CASES,
-    colorMapNewCases,
-  };
+export function updateColorMapNewCases(colorMapNewCases) {
+  return updateUserState({ colorMapNewCases });
 }
 
-export function changeCurrentDate(currentDate) {
-  return {
-    type: CHANGE_CURRENT_DATE,
-    currentDate,
-  };
+export function updateCurrentDate(currentDate) {
+  return updateUserState({ currentDate });
 }
 
-/**
- * @param {*} zoomState: {level:x, center: [lat,lng], geoId:z}
- */
+export function updateCurrentPlotTab(currentPlotTab) {
+  return updateUserState({ currentPlotTab });
+}
+
 export function updateZoomState(zoomState) {
+  return updateUserState({ zoomState });
+}
+
+export function updateUserState(userState) {
   return {
-    type: UPDATE_ZOOM_STATE,
-    zoomState,
+    type: UPDATE_USER_STATE,
+    userState,
   };
 }

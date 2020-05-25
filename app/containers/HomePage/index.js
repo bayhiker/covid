@@ -33,25 +33,41 @@ import {
   makeSelectHomeZoomState,
   makeSelectHomeColorMapNewCases,
   makeSelectHomeCurrentDate,
+  makeSelectHomeCurrentPlotTab,
 } from './selectors';
 import {
-  changeSearchWith,
-  changeColorMapBy,
-  changeColorMapPerCapita,
-  updateZoomState,
-  changeColorMapNewCases,
-  changeCurrentDate,
+  updateSearchWith,
+  updateColorMapBy,
+  updateColorMapPerCapita,
+  updateUserState,
+  updateColorMapNewCases,
+  updateCurrentDate,
+  updateCurrentPlotTab,
 } from './actions';
 import { clearStateDialog } from '../../utils/dialogState';
 import CovidMap from '../../components/CovidMap';
 import CovidPlot from '../../components/CovidPlot';
 
 const key = 'homePage';
+// 268689 is phone number code of the word county
+const zoomWithCountyHashPrefix = 2.0268689;
+
 const useStyles = makeStyles(() => ({
   grow: {
     flexGrow: 1,
   },
 }));
+
+const getZoomWithCountyHash = countyName => {
+  // Get a code that uniquely identifies a county within a state
+  // All chars multiplied together, mod 9999999 along the way
+  let countyHash = 1;
+  for (let i = 0; i < countyName.length; i += 1) {
+    countyHash =
+      (countyHash * countyName.toLowerCase().charCodeAt(i)) % 9999999;
+  }
+  return zoomWithCountyHashPrefix + countyHash / 10 ** 14;
+};
 
 export function HomePage({
   loading,
@@ -63,37 +79,40 @@ export function HomePage({
   colorMapNewCases,
   zoomState,
   currentDate,
+  currentPlotTab,
   onClickDialogOk,
   onChangeSearchWith,
   onChangeColorMapBy,
   onChangeColorMapPerCapita,
   onChangeColorMapNewCases,
-  onUpdateZoomState,
+  onUpdateUserState,
   onChangeCurrentDate,
+  onChangeCurrentPlotTab,
 }) {
   const [data, setData] = React.useState({});
-  const location = useLocation();
+  const urlLocation = useLocation();
   useInjectReducer({ key, reducer });
   useInjectSaga({ key, saga });
   const classes = useStyles();
 
-  // 268689 is phone number code of the word county
-  const zoomWithCountyHashPrefix = 2.0268689;
-
   React.useEffect(() => {
-    processLocation();
+    processLocationAndParams();
   }, []);
 
   React.useEffect(() => {
     loadData();
   }, [zoomState.dataUrl]);
 
-  const processLocation = () => {
-    const { pathname } = location;
+  const processLocationAndParams = () => {
+    const { pathname, search } = urlLocation;
     const [, country, state, county] = pathname.split('/');
+    const urlParams = new URLSearchParams(search);
+    const m = urlParams.get('m');
+    const p = urlParams.get('p');
+    const newUserState = {};
     if (country && country.toUpperCase() === 'US') {
-      const newZoomState = { zoom: 1, geoId: '0' };
       if (state && state.length === 2) {
+        const newZoomState = {};
         const fips = stateFips[state.toUpperCase()];
         if (fips in usStates) {
           newZoomState.zoom = 2;
@@ -107,20 +126,27 @@ export function HomePage({
           usStates[newZoomState.geoId].lon,
           usStates[newZoomState.geoId].lat,
         ];
+        newUserState.zoomState = newZoomState;
       }
-      onUpdateZoomState(newZoomState);
     }
-  };
-
-  const getZoomWithCountyHash = countyName => {
-    // Get a code that uniquely identifies a county within a state
-    // All chars multiplied together, mod 9999999 along the way
-    let countyHash = 1;
-    for (let i = 0; i < countyName.length; i += 1) {
-      countyHash =
-        (countyHash * countyName.toLowerCase().charCodeAt(i)) % 9999999;
+    if (m) {
+      if (m.includes('c')) {
+        newUserState.colorMapBy = 'confirmed';
+      }
+      if (m.includes('d')) {
+        newUserState.colorMapBy = 'deaths';
+      }
+      if (m.includes('n')) {
+        newUserState.colorMapNewCases = true;
+      }
+      if (m.includes('p')) {
+        newUserState.colorMapPerCapita = true;
+      }
     }
-    return zoomWithCountyHashPrefix + countyHash / 10 ** 14;
+    if (p) {
+      newUserState.currentPlotTab = parseInt(p, 10);
+    }
+    onUpdateUserState(newUserState);
   };
 
   const loadData = () => {
@@ -156,7 +182,7 @@ export function HomePage({
       return;
     }
     const countyFips = d.hashes[countyHash];
-    onUpdateZoomState({ zoom: 8, geoId: countyFips });
+    onUpdateUserState({ zoomState: { zoom: 8, geoId: countyFips } });
   };
 
   const stateDialogProps = {
@@ -181,16 +207,20 @@ export function HomePage({
     colorMapBy,
     colorMapPerCapita,
     colorMapNewCases,
-    onUpdateZoomState,
+    currentPlotTab,
+    onUpdateUserState,
     onChangeCurrentDate,
     onChangeColorMapBy,
     onChangeColorMapPerCapita,
     onChangeColorMapNewCases,
+    onChangeCurrentPlotTab,
   };
 
   const covidPlotProps = {
     data,
     zoomState,
+    currentPlotTab,
+    onChangeCurrentPlotTab,
   };
 
   return (
@@ -231,6 +261,7 @@ HomePage.propTypes = {
   errorMessage: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
   searchWith: PropTypes.string,
   currentDate: PropTypes.oneOfType(PropTypes.string, PropTypes.bool),
+  currentPlotTab: PropTypes.number,
   colorMapBy: PropTypes.oneOf(['confirmed', 'deaths']),
   colorMapPerCapita: PropTypes.bool,
   colorMapNewCases: PropTypes.bool,
@@ -240,8 +271,9 @@ HomePage.propTypes = {
   onChangeColorMapBy: PropTypes.func,
   onChangeColorMapPerCapita: PropTypes.func,
   onChangeColorMapNewCases: PropTypes.func,
-  onUpdateZoomState: PropTypes.func,
+  onUpdateUserState: PropTypes.func,
   onChangeCurrentDate: PropTypes.func,
+  onChangeCurrentPlotTab: PropTypes.func,
 };
 
 const mapStateToProps = createStructuredSelector({
@@ -250,6 +282,7 @@ const mapStateToProps = createStructuredSelector({
   errorMessage: makeSelectHomeErrorMessage(),
   searchWith: makeSelectHomeSearchWith(),
   currentDate: makeSelectHomeCurrentDate(),
+  currentPlotTab: makeSelectHomeCurrentPlotTab(),
   colorMapBy: makeSelectHomeColorMapBy(),
   colorMapPerCapita: makeSelectHomeColorMapPerCapita(),
   colorMapNewCases: makeSelectHomeColorMapNewCases(),
@@ -262,22 +295,25 @@ function mapDispatchToProps(dispatch) {
       dispatch(clearStateDialog());
     },
     onChangeSearchWith: evt => {
-      dispatch(changeSearchWith(evt.target.value));
+      dispatch(updateSearchWith(evt.target.value));
     },
     onChangeColorMapBy: evt => {
-      dispatch(changeColorMapBy(evt.target.value));
+      dispatch(updateColorMapBy(evt.target.value));
     },
     onChangeColorMapPerCapita: evt => {
-      dispatch(changeColorMapPerCapita(evt.target.checked));
+      dispatch(updateColorMapPerCapita(evt.target.checked));
     },
     onChangeColorMapNewCases: evt => {
-      dispatch(changeColorMapNewCases(evt.target.checked));
+      dispatch(updateColorMapNewCases(evt.target.checked));
     },
-    onUpdateZoomState: zoomState => {
-      dispatch(updateZoomState(zoomState));
+    onUpdateUserState: userState => {
+      dispatch(updateUserState(userState));
     },
     onChangeCurrentDate: newCurrentDate => {
-      dispatch(changeCurrentDate(newCurrentDate));
+      dispatch(updateCurrentDate(newCurrentDate));
+    },
+    onChangeCurrentPlotTab: (evt, newCurrentPlotTab) => {
+      dispatch(updateCurrentPlotTab(newCurrentPlotTab));
     },
   };
 }

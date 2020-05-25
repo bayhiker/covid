@@ -381,7 +381,7 @@ const getTestingCharts = (metaData, casesDataToPlot) => (
             tickFormatter={formatPercentageTick}
             label={{
               value: 'Postive Rate',
-              position: 'insideBottomRight',
+              position: 'insideBottomLeft',
             }}
             allowDecimals
           />
@@ -391,7 +391,7 @@ const getTestingCharts = (metaData, casesDataToPlot) => (
             tickFormatter={formatNumericTick}
             label={{
               value: 'Tests',
-              position: 'insideBottomLeft',
+              position: 'insideBottomRight',
             }}
           />
           <Tooltip />
@@ -444,13 +444,14 @@ function a11yProps(index) {
   };
 }
 
-function CovidPlot({ data, zoomState }) {
+function CovidPlot({
+  data,
+  zoomState,
+  currentPlotTab,
+  onChangeCurrentPlotTab,
+}) {
   const classes = useStyles();
-  const [value, setValue] = React.useState(0);
 
-  const handleChange = (event, newValue) => {
-    setValue(newValue);
-  };
   const { metaData, casesDataToPlot } = extractDataToPlot(data, zoomState);
 
   const shouldDrawTestingTab = () => zoomState.zoom && zoomState.zoom < 8;
@@ -458,8 +459,8 @@ function CovidPlot({ data, zoomState }) {
   return (
     <div className={classes.root}>
       <Tabs
-        value={value}
-        onChange={handleChange}
+        value={currentPlotTab}
+        onChange={onChangeCurrentPlotTab}
         indicatorColor="primary"
         textColor="primary"
         variant="scrollable"
@@ -476,22 +477,22 @@ function CovidPlot({ data, zoomState }) {
           <Tab label="Testing" {...a11yProps(4)} />
         )}
       </Tabs>
-      <TabPanel value={value} index={0}>
+      <TabPanel value={currentPlotTab} index={0}>
         {getOverviewCharts(metaData, casesDataToPlot)}
       </TabPanel>
-      <TabPanel value={value} index={1}>
+      <TabPanel value={currentPlotTab} index={1}>
         {getNewCasesCharts(metaData, casesDataToPlot)}
       </TabPanel>
-      <TabPanel value={value} index={2}>
+      <TabPanel value={currentPlotTab} index={2}>
         {getDoublingCharts(metaData, casesDataToPlot)}
       </TabPanel>
-      <TabPanel value={value} index={3}>
+      <TabPanel value={currentPlotTab} index={3}>
         {getRollingCharts(metaData, casesDataToPlot)}
       </TabPanel>
       {!shouldDrawTestingTab() ? (
         ''
       ) : (
-        <TabPanel value={value} index={4}>
+        <TabPanel value={currentPlotTab} index={4}>
           {getTestingCharts(metaData, casesDataToPlot)}
         </TabPanel>
       )}
@@ -502,6 +503,8 @@ function CovidPlot({ data, zoomState }) {
 CovidPlot.propTypes = {
   data: PropTypes.any,
   zoomState: PropTypes.any,
+  currentPlotTab: PropTypes.number,
+  onChangeCurrentPlotTab: PropTypes.func,
 };
 
 export default CovidPlot;

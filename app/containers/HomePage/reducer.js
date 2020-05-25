@@ -7,14 +7,9 @@
 import produce from 'immer';
 import {
   DEFAULT_ACTION,
-  CHANGE_SEARCH_WITH,
-  CHANGE_COLOR_MAP_BY,
-  CHANGE_COLOR_MAP_PER_CAPITA,
-  UPDATE_ZOOM_STATE,
+  UPDATE_USER_STATE,
   GEO_JSON_URL_COUNTIES,
   GEO_JSON_URL_STATES,
-  CHANGE_COLOR_MAP_NEW_CASES,
-  CHANGE_CURRENT_DATE,
 } from './constants';
 import { config } from '../../constants';
 import {
@@ -31,6 +26,7 @@ export const initialState = getDialogInitialState({
   colorMapBy: 'deaths',
   colorMapPerCapita: false,
   colorMapNewCases: false,
+  currentPlotTab: 0,
   // Data to be dynamically loaded from server
   data: {},
   currentDate: false,
@@ -47,28 +43,56 @@ export const initialState = getDialogInitialState({
   },
 });
 
-function updateZoomState(draft, zoomState) {
-  if ('center' in zoomState) {
-    draft.userData.zoomState.center = zoomState.center;
+function updateUserState(draft, userState) {
+  if ('searchWith' in userState) {
+    draft.userData.searchWith = userState.searchWith;
   }
-  if ('zoom' in zoomState) {
-    draft.userData.zoomState.zoom = zoomState.zoom;
-    draft.userData.zoomState.geoJsonUrl =
-      zoomState.zoom >= 2 ? GEO_JSON_URL_COUNTIES : GEO_JSON_URL_STATES;
+  if ('colorMapBy' in userState) {
+    draft.userData.colorMapBy = userState.colorMapBy;
   }
-  if ('geoId' in zoomState) {
-    draft.userData.zoomState.geoId = zoomState.geoId;
+  if ('colorMapPerCapita' in userState) {
+    draft.userData.colorMapPerCapita = userState.colorMapPerCapita;
   }
-  const { zoom, geoId } = draft.userData.zoomState;
-  let dataUrl = `${config.DATA_URL_PREFIX}/0.json`;
-  if (zoom >= 2) {
-    let geoIdState = 20;
-    if (geoId !== undefined || geoId !== '0') {
-      geoIdState = geoId.substring(0, 2);
+  if ('colorMapNewCases' in userState) {
+    draft.userData.colorMapNewCases = userState.colorMapNewCases;
+  }
+  if ('currentPlotTab' in userState) {
+    draft.userData.currentPlotTab = userState.currentPlotTab;
+  }
+  if ('currentDate' in userState) {
+    draft.userData.currentDate = userState.currentDate;
+  }
+  if ('zoomState' in userState) {
+    const { zoomState } = userState;
+    if ('center' in zoomState) {
+      draft.userData.zoomState.center = zoomState.center;
     }
-    dataUrl = `${config.DATA_URL_PREFIX}/${geoIdState}.json`;
+    if ('zoom' in zoomState) {
+      draft.userData.zoomState.zoom = zoomState.zoom;
+      draft.userData.zoomState.geoJsonUrl =
+        zoomState.zoom >= 2 ? GEO_JSON_URL_COUNTIES : GEO_JSON_URL_STATES;
+    }
+    if ('geoId' in zoomState) {
+      draft.userData.zoomState.geoId = zoomState.geoId;
+    }
+    const { zoom, geoId } = draft.userData.zoomState;
+    let dataUrl = `${config.DATA_URL_PREFIX}/0.json`;
+    if (zoom >= 2) {
+      let geoIdState = 20;
+      if (geoId !== undefined || geoId !== '0') {
+        geoIdState = geoId.substring(0, 2);
+      }
+      dataUrl = `${config.DATA_URL_PREFIX}/${geoIdState}.json`;
+    }
+    draft.userData.zoomState.dataUrl = dataUrl;
   }
-  draft.userData.zoomState.dataUrl = dataUrl;
+  // If at county level, there's no testing tab
+  if (
+    draft.userData.zoomState.zoom >= 8 &&
+    draft.userData.currentPlotTab === 4
+  ) {
+    draft.userData.currentPlotTab = 3;
+  }
 }
 
 /* eslint-disable default-case, no-param-reassign */
@@ -90,23 +114,8 @@ const homePageReducer = (state = initialState, action) =>
         // resetDialogState(draft) already clears loading/error/successMessage.
         // This action is still needed so reducer can be called.
         break;
-      case CHANGE_SEARCH_WITH:
-        draft.userData.searchWith = action.searchWith;
-        break;
-      case CHANGE_COLOR_MAP_BY:
-        draft.userData.colorMapBy = action.colorMapBy;
-        break;
-      case CHANGE_COLOR_MAP_PER_CAPITA:
-        draft.userData.colorMapPerCapita = action.colorMapPerCapita;
-        break;
-      case CHANGE_COLOR_MAP_NEW_CASES:
-        draft.userData.colorMapNewCases = action.colorMapNewCases;
-        break;
-      case UPDATE_ZOOM_STATE:
-        updateZoomState(draft, action.zoomState);
-        break;
-      case CHANGE_CURRENT_DATE:
-        draft.userData.currentDate = action.currentDate;
+      case UPDATE_USER_STATE:
+        updateUserState(draft, action.userState);
         break;
     }
   });

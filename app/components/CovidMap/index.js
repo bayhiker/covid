@@ -115,7 +115,7 @@ function CovidMap({
   colorMapBy,
   colorMapPerCapita,
   colorMapNewCases,
-  onUpdateZoomState,
+  onUpdateUserState,
   onChangeCurrentDate,
   onChangeColorMapBy,
   onChangeColorMapPerCapita,
@@ -457,7 +457,7 @@ function CovidMap({
       newZoomState.zoom = 8;
       newZoomState.center = geoCentroid(geo);
     }
-    onUpdateZoomState(newZoomState);
+    onUpdateUserState({ zoomState: newZoomState });
   };
 
   const formatGeoId = geoId => {
@@ -610,7 +610,9 @@ function CovidMap({
             zoom={zoomState.zoom}
             center={zoomState.center}
             onMoveEnd={evt => {
-              onUpdateZoomState({ zoom: evt.zoom, center: evt.coordinates });
+              onUpdateUserState({
+                zoomState: { zoom: evt.zoom, center: evt.coordinates },
+              });
             }}
           >
             <Geographies geography={zoomState.geoJsonUrl}>
@@ -647,7 +649,7 @@ CovidMap.propTypes = {
   colorMapNewCases: PropTypes.bool,
   colorMapPerCapita: PropTypes.bool,
   zoomState: PropTypes.any,
-  onUpdateZoomState: PropTypes.func,
+  onUpdateUserState: PropTypes.func,
   onChangeCurrentDate: PropTypes.func,
   onChangeColorMapBy: PropTypes.func,
   onChangeColorMapPerCapita: PropTypes.func,
