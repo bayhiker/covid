@@ -1,3 +1,5 @@
+// 268689 is phone number code of the word county
+export const zoomWithCountyHashPrefix = 2.0268689;
 export const stateFips = {
   AK: '02',
   AL: '01',
@@ -269,4 +271,15 @@ export function geoIsState(geoId) {
 
 export function geoIsCounty(geoId) {
   return geoId && geoId.length === 5;
+}
+
+export function getZoomWithCountyHash(countyName) {
+  // Get a code that uniquely identifies a county within a state
+  // All chars multiplied together, mod 9999999 along the way
+  let countyHash = 1;
+  for (let i = 0; i < countyName.length; i += 1) {
+    countyHash =
+      (countyHash * countyName.toLowerCase().charCodeAt(i)) % 9999999;
+  }
+  return zoomWithCountyHashPrefix + countyHash / 10 ** 14;
 }

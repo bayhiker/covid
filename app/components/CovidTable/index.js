@@ -11,7 +11,8 @@ import { zoomLevelIsCountry } from '../../utils/mapUtils';
 import { prevDateTitle } from '../../utils/dateUtils';
 import YouQuizPopover from '../YouQuizPopover';
 
-function CovidTable({ children, data, zoomState }) {
+function CovidTable({ children, data, covidState }) {
+  const { zoomState } = covidState;
   const countryLevel = zoomLevelIsCountry(zoomState);
   const columns = [
     {
@@ -105,7 +106,7 @@ function CovidTable({ children, data, zoomState }) {
 CovidTable.propTypes = {
   children: PropTypes.any,
   data: PropTypes.any,
-  zoomState: PropTypes.any,
+  covidState: PropTypes.any,
 };
 
 export default CovidTable;

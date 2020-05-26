@@ -21,19 +21,17 @@ import saga from './saga';
 import StateDialog from '../../components/StateDialog';
 import { CenteredSection } from '../../utils/styledUtil';
 import YouQuizTopBar from '../../components/YouQuizTopBar';
-import { stateFips, usStates } from '../../utils/mapUtils';
+import {
+  stateFips,
+  usStates,
+  zoomWithCountyHashPrefix,
+  getZoomWithCountyHash,
+} from '../../utils/mapUtils';
 
 import {
   makeSelectHomeLoading,
   makeSelectHomeSuccessMessage,
   makeSelectHomeErrorMessage,
-  makeSelectHomeSearchWith,
-  makeSelectHomeColorMapBy,
-  makeSelectHomeColorMapPerCapita,
-  makeSelectHomeZoomState,
-  makeSelectHomeColorMapNewCases,
-  makeSelectHomeCurrentDate,
-  makeSelectHomeCurrentPlotTab,
   makeSelectHomeCovidState,
 } from './selectors';
 import {
@@ -51,8 +49,7 @@ import CovidPlot from '../../components/CovidPlot';
 import { updateCovidState } from '../../utils/searchParams';
 
 const key = 'homePage';
-// 268689 is phone number code of the word county
-const zoomWithCountyHashPrefix = 2.0268689;
+let controller = new AbortController();
 
 const useStyles = makeStyles(() => ({
   grow: {
@@ -60,29 +57,11 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-const getZoomWithCountyHash = countyName => {
-  // Get a code that uniquely identifies a county within a state
-  // All chars multiplied together, mod 9999999 along the way
-  let countyHash = 1;
-  for (let i = 0; i < countyName.length; i += 1) {
-    countyHash =
-      (countyHash * countyName.toLowerCase().charCodeAt(i)) % 9999999;
-  }
-  return zoomWithCountyHashPrefix + countyHash / 10 ** 14;
-};
-
 export function HomePage({
   loading,
   successMessage,
   errorMessage,
-  searchWith,
-  colorMapBy,
-  colorMapPerCapita,
-  colorMapNewCases,
-  zoomState,
   covidState,
-  currentDate,
-  currentPlotTab,
   onClickDialogOk,
   onChangeSearchWith,
   onChangeColorMapBy,
@@ -92,11 +71,11 @@ export function HomePage({
   onChangeCurrentDate,
   onChangeCurrentPlotTab,
 }) {
+  const classes = useStyles();
   const [data, setData] = React.useState({});
   const urlLocation = useLocation();
   useInjectReducer({ key, reducer });
   useInjectSaga({ key, saga });
-  const classes = useStyles();
 
   React.useEffect(() => {
     processLocationAndParams();
@@ -104,16 +83,18 @@ export function HomePage({
 
   React.useEffect(() => {
     loadData();
-  }, [zoomState.dataUrl]);
+  }, [covidState.zoomState.dataUrl]);
 
   const processLocationAndParams = () => {
-    const { pathname, search } = urlLocation;
-    const [, country, state, county] = pathname.split('/');
     const newUserState = {};
+    const { pathname, search } = urlLocation;
+    updateCovidState(newUserState, search);
+    // Process location, if present, location take higher priority then fips in m param
+    const [, country, state, county] = pathname.split('/');
     if (country && country.toUpperCase() === 'US') {
       if (state && state.length === 2) {
-        const newZoomState = {};
         const fips = stateFips[state.toUpperCase()];
+        const newZoomState = {};
         if (fips in usStates) {
           newZoomState.zoom = 2;
           newZoomState.geoId = fips;
@@ -129,13 +110,17 @@ export function HomePage({
         newUserState.zoomState = newZoomState;
       }
     }
-    updateCovidState(newUserState, search);
     onUpdateUserState(newUserState);
   };
 
   const loadData = () => {
     try {
-      fetch(zoomState.dataUrl, { compress: true })
+      controller.abort(); // Abort previous data calls, prev calls may comeback later and mess up data results
+      controller = new AbortController();
+      fetch(covidState.zoomState.dataUrl, {
+        compress: true,
+        signal: controller.signal,
+      })
         .then(response => response.json())
         .then(d => {
           setData(d);
@@ -151,12 +136,14 @@ export function HomePage({
     // Check for county information encoded in a zoom a tiny bit larger than zoomWithCountyHashPrefix
     // For example, 2.00268689xxxx mean a county with index xxxx
     if (
-      zoomState.zoom < zoomWithCountyHashPrefix ||
-      zoomState.zoom > zoomWithCountyHashPrefix + 10 ** -7
+      covidState.zoomState.zoom < zoomWithCountyHashPrefix ||
+      covidState.zoomState.zoom > zoomWithCountyHashPrefix + 10 ** -7
     ) {
       return;
     }
-    const zoomWithCountyHashTimesTen = Math.floor(zoomState.zoom * 10 ** 15);
+    const zoomWithCountyHashTimesTen = Math.floor(
+      covidState.zoomState.zoom * 10 ** 15,
+    );
     if (zoomWithCountyHashTimesTen % 10 !== 0) {
       return;
     }
@@ -184,13 +171,7 @@ export function HomePage({
 
   const covidMapProps = {
     data,
-    currentDate,
-    zoomState,
-    searchWith,
-    colorMapBy,
-    colorMapPerCapita,
-    colorMapNewCases,
-    currentPlotTab,
+    covidState,
     onUpdateUserState,
     onChangeCurrentDate,
     onChangeColorMapBy,
@@ -201,8 +182,7 @@ export function HomePage({
 
   const covidPlotProps = {
     data,
-    zoomState,
-    currentPlotTab,
+    covidState,
     onChangeCurrentPlotTab,
   };
 
@@ -242,13 +222,6 @@ HomePage.propTypes = {
   loading: PropTypes.bool,
   successMessage: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
   errorMessage: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
-  searchWith: PropTypes.string,
-  currentDate: PropTypes.oneOfType(PropTypes.string, PropTypes.bool),
-  currentPlotTab: PropTypes.number,
-  colorMapBy: PropTypes.oneOf(['confirmed', 'deaths']),
-  colorMapPerCapita: PropTypes.bool,
-  colorMapNewCases: PropTypes.bool,
-  zoomState: PropTypes.any,
   covidState: PropTypes.any,
   onClickDialogOk: PropTypes.func,
   onChangeSearchWith: PropTypes.func,
@@ -264,13 +237,6 @@ const mapStateToProps = createStructuredSelector({
   loading: makeSelectHomeLoading(),
   successMessage: makeSelectHomeSuccessMessage(),
   errorMessage: makeSelectHomeErrorMessage(),
-  searchWith: makeSelectHomeSearchWith(),
-  currentDate: makeSelectHomeCurrentDate(),
-  currentPlotTab: makeSelectHomeCurrentPlotTab(),
-  colorMapBy: makeSelectHomeColorMapBy(),
-  colorMapPerCapita: makeSelectHomeColorMapPerCapita(),
-  colorMapNewCases: makeSelectHomeColorMapNewCases(),
-  zoomState: makeSelectHomeZoomState(),
   covidState: makeSelectHomeCovidState(),
 });
 

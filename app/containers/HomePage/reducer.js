@@ -27,8 +27,6 @@ export const initialState = getDialogInitialState({
   colorMapPerCapita: false,
   colorMapNewCases: false,
   currentPlotTab: 0,
-  // Data to be dynamically loaded from server
-  data: {},
   currentDate: false,
   zoomState: {
     zoom: 1,

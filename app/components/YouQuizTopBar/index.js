@@ -100,7 +100,7 @@ function YouQuizTopBar(props) {
 
   const covidTableProps = {
     data,
-    zoomState: covidState.zoomState,
+    covidState,
   };
 
   return (
@@ -159,6 +159,7 @@ function YouQuizTopBar(props) {
 }
 
 YouQuizTopBar.propTypes = {
+  data: PropTypes.any,
   covidState: PropTypes.any,
   onChangeSearchWith: PropTypes.func,
 };

@@ -444,22 +444,21 @@ function a11yProps(index) {
   };
 }
 
-function CovidPlot({
-  data,
-  zoomState,
-  currentPlotTab,
-  onChangeCurrentPlotTab,
-}) {
+function CovidPlot({ data, covidState, onChangeCurrentPlotTab }) {
   const classes = useStyles();
 
-  const { metaData, casesDataToPlot } = extractDataToPlot(data, zoomState);
+  const { metaData, casesDataToPlot } = extractDataToPlot(
+    data,
+    covidState.zoomState,
+  );
 
-  const shouldDrawTestingTab = () => zoomState.zoom && zoomState.zoom < 8;
+  const shouldDrawTestingTab = () =>
+    covidState.zoomState.zoom && covidState.zoomState.zoom < 8;
 
   return (
     <div className={classes.root}>
       <Tabs
-        value={currentPlotTab}
+        value={covidState.currentPlotTab}
         onChange={onChangeCurrentPlotTab}
         indicatorColor="primary"
         textColor="primary"
@@ -477,22 +476,22 @@ function CovidPlot({
           <Tab label="Testing" {...a11yProps(4)} />
         )}
       </Tabs>
-      <TabPanel value={currentPlotTab} index={0}>
+      <TabPanel value={covidState.currentPlotTab} index={0}>
         {getOverviewCharts(metaData, casesDataToPlot)}
       </TabPanel>
-      <TabPanel value={currentPlotTab} index={1}>
+      <TabPanel value={covidState.currentPlotTab} index={1}>
         {getNewCasesCharts(metaData, casesDataToPlot)}
       </TabPanel>
-      <TabPanel value={currentPlotTab} index={2}>
+      <TabPanel value={covidState.currentPlotTab} index={2}>
         {getDoublingCharts(metaData, casesDataToPlot)}
       </TabPanel>
-      <TabPanel value={currentPlotTab} index={3}>
+      <TabPanel value={covidState.currentPlotTab} index={3}>
         {getRollingCharts(metaData, casesDataToPlot)}
       </TabPanel>
       {!shouldDrawTestingTab() ? (
         ''
       ) : (
-        <TabPanel value={currentPlotTab} index={4}>
+        <TabPanel value={covidState.currentPlotTab} index={4}>
           {getTestingCharts(metaData, casesDataToPlot)}
         </TabPanel>
       )}
@@ -502,8 +501,7 @@ function CovidPlot({
 
 CovidPlot.propTypes = {
   data: PropTypes.any,
-  zoomState: PropTypes.any,
-  currentPlotTab: PropTypes.number,
+  covidState: PropTypes.any,
   onChangeCurrentPlotTab: PropTypes.func,
 };
 

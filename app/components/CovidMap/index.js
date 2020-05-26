@@ -109,18 +109,20 @@ const useStyles = makeStyles(theme => ({
 
 function CovidMap({
   data,
-  currentDate,
-  zoomState,
-  searchWith,
-  colorMapBy,
-  colorMapPerCapita,
-  colorMapNewCases,
+  covidState,
   onUpdateUserState,
   onChangeCurrentDate,
   onChangeColorMapBy,
   onChangeColorMapPerCapita,
   onChangeColorMapNewCases,
 }) {
+  const {
+    currentDate,
+    zoomState,
+    colorMapBy,
+    colorMapPerCapita,
+    colorMapNewCases,
+  } = covidState;
   const classes = useStyles();
   const [tooltipContent, setTooltipContent] = React.useState('');
   const [newCases, setNewCases] = React.useState(DEFAULT_NEW_CASES);
@@ -643,12 +645,7 @@ function CovidMap({
 
 CovidMap.propTypes = {
   data: PropTypes.any,
-  currentDate: PropTypes.oneOfType(PropTypes.string, PropTypes.bool),
-  searchWith: PropTypes.string,
-  colorMapBy: PropTypes.oneOf(['confirmed', 'deaths']),
-  colorMapNewCases: PropTypes.bool,
-  colorMapPerCapita: PropTypes.bool,
-  zoomState: PropTypes.any,
+  covidState: PropTypes.any,
   onUpdateUserState: PropTypes.func,
   onChangeCurrentDate: PropTypes.func,
   onChangeColorMapBy: PropTypes.func,

@@ -36,27 +36,6 @@ export const makeSelectHomeSuccessMessage = () =>
 export const makeSelectHomeErrorMessage = () =>
   makeSelectErrorMessage(selectHomePageDomain);
 
-export const makeSelectHomeSearchWith = () =>
-  makeSelectUserData(selectHomePageDomain, 'search');
-
-export const makeSelectHomeColorMapBy = () =>
-  makeSelectUserData(selectHomePageDomain, 'colorMapBy');
-
-export const makeSelectHomeColorMapPerCapita = () =>
-  makeSelectUserData(selectHomePageDomain, 'colorMapPerCapita');
-
-export const makeSelectHomeColorMapNewCases = () =>
-  makeSelectUserData(selectHomePageDomain, 'colorMapNewCases');
-
-export const makeSelectHomeZoomState = () =>
-  makeSelectUserData(selectHomePageDomain, 'zoomState');
-
-export const makeSelectHomeCurrentDate = () =>
-  makeSelectUserData(selectHomePageDomain, 'currentDate');
-
-export const makeSelectHomeCurrentPlotTab = () =>
-  makeSelectUserData(selectHomePageDomain, 'currentPlotTab');
-
 export const makeSelectHomeCovidState = () =>
   makeSelectUserData(selectHomePageDomain);
 
