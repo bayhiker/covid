@@ -399,7 +399,7 @@ const getTestingCharts = (metaData, casesDataToPlot) => (
           <ReferenceLine
             yAxisId="left"
             x={metaData.references.positiveRateTrendStart}
-            stroke="#00F"
+            stroke="#F00"
             label={{
               value: `${
                 metaData.references.positiveRateTrendDuration

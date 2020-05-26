@@ -16,11 +16,12 @@ import {
   Paper,
   Link,
 } from '@material-ui/core';
-import { Favorite, Storage } from '@material-ui/icons';
+import { Favorite, Storage, Share } from '@material-ui/icons';
 import ForumIcon from '@material-ui/icons/Forum';
 
 import CovidTable from '../CovidTable';
 import CovidThanks from '../CovidThanks';
+import CovidShare from '../CovidShare';
 
 const useStyles = makeStyles(theme => ({
   toolbar: theme.mixins.toolbar,
@@ -90,12 +91,16 @@ const useStyles = makeStyles(theme => ({
 }));
 
 function YouQuizTopBar(props) {
-  const { data, zoomState, searchWith, onChangeSearchWith } = props;
+  const { data, covidState, onChangeSearchWith } = props;
   const classes = useStyles();
+
+  const covidShareProps = {
+    covidState,
+  };
 
   const covidTableProps = {
     data,
-    zoomState,
+    zoomState: covidState.zoomState,
   };
 
   return (
@@ -106,6 +111,15 @@ function YouQuizTopBar(props) {
             COVID-19
           </Typography>
           <div className={classes.grow} />
+          <div>
+            <CovidShare {...covidShareProps}>
+              <Tooltip title="Share">
+                <IconButton>
+                  <Share />
+                </IconButton>
+              </Tooltip>
+            </CovidShare>
+          </div>
           <div>
             <CovidTable {...covidTableProps}>
               <Tooltip title="Data Table">
@@ -145,12 +159,7 @@ function YouQuizTopBar(props) {
 }
 
 YouQuizTopBar.propTypes = {
-  searchWith: PropTypes.string,
-  colorMapBy: PropTypes.oneOf(['confirmed', 'deaths']),
-  colorMapPerCapita: PropTypes.bool,
-  colorMapNewCases: PropTypes.bool,
-  data: PropTypes.any,
-  zoomState: PropTypes.any,
+  covidState: PropTypes.any,
   onChangeSearchWith: PropTypes.func,
 };
 

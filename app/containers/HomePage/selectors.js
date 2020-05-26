@@ -57,4 +57,7 @@ export const makeSelectHomeCurrentDate = () =>
 export const makeSelectHomeCurrentPlotTab = () =>
   makeSelectUserData(selectHomePageDomain, 'currentPlotTab');
 
+export const makeSelectHomeCovidState = () =>
+  makeSelectUserData(selectHomePageDomain);
+
 export default makeSelectHomePage;

@@ -64,9 +64,15 @@ export function mergeUserData(draft, action) {
 // **************** Selectors *******************
 
 export function makeSelectUserData(domain, userDataName) {
+  if (userDataName) {
+    return createSelector(
+      domain,
+      substate => substate.userData[userDataName],
+    );
+  }
   return createSelector(
     domain,
-    substate => substate.userData[userDataName],
+    substate => substate.userData,
   );
 }
 

@@ -34,6 +34,7 @@ import {
   makeSelectHomeColorMapNewCases,
   makeSelectHomeCurrentDate,
   makeSelectHomeCurrentPlotTab,
+  makeSelectHomeCovidState,
 } from './selectors';
 import {
   updateSearchWith,
@@ -47,6 +48,7 @@ import {
 import { clearStateDialog } from '../../utils/dialogState';
 import CovidMap from '../../components/CovidMap';
 import CovidPlot from '../../components/CovidPlot';
+import { updateCovidState } from '../../utils/searchParams';
 
 const key = 'homePage';
 // 268689 is phone number code of the word county
@@ -78,6 +80,7 @@ export function HomePage({
   colorMapPerCapita,
   colorMapNewCases,
   zoomState,
+  covidState,
   currentDate,
   currentPlotTab,
   onClickDialogOk,
@@ -106,9 +109,6 @@ export function HomePage({
   const processLocationAndParams = () => {
     const { pathname, search } = urlLocation;
     const [, country, state, county] = pathname.split('/');
-    const urlParams = new URLSearchParams(search);
-    const m = urlParams.get('m');
-    const p = urlParams.get('p');
     const newUserState = {};
     if (country && country.toUpperCase() === 'US') {
       if (state && state.length === 2) {
@@ -129,23 +129,7 @@ export function HomePage({
         newUserState.zoomState = newZoomState;
       }
     }
-    if (m) {
-      if (m.includes('c')) {
-        newUserState.colorMapBy = 'confirmed';
-      }
-      if (m.includes('d')) {
-        newUserState.colorMapBy = 'deaths';
-      }
-      if (m.includes('n')) {
-        newUserState.colorMapNewCases = true;
-      }
-      if (m.includes('p')) {
-        newUserState.colorMapPerCapita = true;
-      }
-    }
-    if (p) {
-      newUserState.currentPlotTab = parseInt(p, 10);
-    }
+    updateCovidState(newUserState, search);
     onUpdateUserState(newUserState);
   };
 
@@ -194,8 +178,7 @@ export function HomePage({
 
   const youQuizTopBarProps = {
     data,
-    zoomState,
-    searchWith,
+    covidState,
     onChangeSearchWith,
   };
 
@@ -266,6 +249,7 @@ HomePage.propTypes = {
   colorMapPerCapita: PropTypes.bool,
   colorMapNewCases: PropTypes.bool,
   zoomState: PropTypes.any,
+  covidState: PropTypes.any,
   onClickDialogOk: PropTypes.func,
   onChangeSearchWith: PropTypes.func,
   onChangeColorMapBy: PropTypes.func,
@@ -287,6 +271,7 @@ const mapStateToProps = createStructuredSelector({
   colorMapPerCapita: makeSelectHomeColorMapPerCapita(),
   colorMapNewCases: makeSelectHomeColorMapNewCases(),
   zoomState: makeSelectHomeZoomState(),
+  covidState: makeSelectHomeCovidState(),
 });
 
 function mapDispatchToProps(dispatch) {
