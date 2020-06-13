@@ -368,9 +368,15 @@ const getTestingCharts = (metaData, casesDataToPlot) => (
             stroke="#00F"
           />
           <Line
+            yAxisId="right"
+            type="monotone"
+            dataKey="tests today"
+            stroke="#0F0"
+          />
+          <Line
             yAxisId="left"
             type="monotone"
-            dataKey="positive rate"
+            dataKey="positive rate today"
             stroke="#F00"
           />
           <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
@@ -447,13 +453,12 @@ function a11yProps(index) {
 function CovidPlot({ data, covidState, onChangeCurrentPlotTab }) {
   const classes = useStyles();
 
+  const shouldDrawTestingTab = covidState.zoomState.zoom < 8;
+
   const { metaData, casesDataToPlot } = extractDataToPlot(
     data,
     covidState.zoomState,
   );
-
-  const shouldDrawTestingTab = () =>
-    covidState.zoomState.zoom && covidState.zoomState.zoom < 8;
 
   return (
     <div className={classes.root}>
@@ -470,11 +475,7 @@ function CovidPlot({ data, covidState, onChangeCurrentPlotTab }) {
         <Tab label="New Cases" {...a11yProps(1)} />
         <Tab label="Doubling" {...a11yProps(2)} />
         <Tab label="Rolling" {...a11yProps(3)} />
-        {!shouldDrawTestingTab() ? (
-          ''
-        ) : (
-          <Tab label="Testing" {...a11yProps(4)} />
-        )}
+        {!shouldDrawTestingTab ? '' : <Tab label="Testing" {...a11yProps(4)} />}
       </Tabs>
       <TabPanel value={covidState.currentPlotTab} index={0}>
         {getOverviewCharts(metaData, casesDataToPlot)}
@@ -488,7 +489,7 @@ function CovidPlot({ data, covidState, onChangeCurrentPlotTab }) {
       <TabPanel value={covidState.currentPlotTab} index={3}>
         {getRollingCharts(metaData, casesDataToPlot)}
       </TabPanel>
-      {!shouldDrawTestingTab() ? (
+      {!shouldDrawTestingTab ? (
         ''
       ) : (
         <TabPanel value={covidState.currentPlotTab} index={4}>

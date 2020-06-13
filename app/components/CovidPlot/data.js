@@ -3,6 +3,7 @@ import {
   dateToTitle,
   dateToShortTitle,
   newDateWithOffset,
+  prevDateTitle,
 } from '../../utils/dateUtils';
 import {
   zoomLevelIsCounty,
@@ -113,8 +114,8 @@ export const extractDataToPlot = (data, zoomState) => {
     let trendStartIndex = totalDays - 1;
     while (
       trendStartIndex > 0 &&
-      casesDataToPlot[trendStartIndex - 1]['positive rate'] >=
-        casesDataToPlot[trendStartIndex]['positive rate']
+      casesDataToPlot[trendStartIndex - 1]['positive rate today'] >=
+        casesDataToPlot[trendStartIndex]['positive rate today']
     ) {
       trendStartIndex -= 1;
     }
@@ -161,8 +162,16 @@ export const extractDataToPlot = (data, zoomState) => {
       currentDataPoint.mobility = mobility;
     }
     if (!countyLevel) {
-      currentDataPoint['total tests'] = timeSeriesSettledCases[seriesKey];
-      currentDataPoint['positive rate'] = timeSeriesPositiveRate[seriesKey];
+      const settledCases = timeSeriesSettledCases[seriesKey];
+      const seriesKeyYesterday = prevDateTitle(seriesKey);
+      let settledCasesYesterday = timeSeriesSettledCases[seriesKeyYesterday];
+      if (!settledCasesYesterday) {
+        settledCasesYesterday = 0;
+      }
+      currentDataPoint['total tests'] = settledCases;
+      currentDataPoint['tests today'] = settledCases - settledCasesYesterday;
+      currentDataPoint['positive rate today'] =
+        timeSeriesPositiveRate[seriesKey];
       currentDataPoint['pending cases'] = timeSeriesPendingCases[seriesKey];
     }
 
