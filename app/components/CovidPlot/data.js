@@ -20,7 +20,7 @@ export const getRollingAverageDataKey = caseType =>
 export const extractDataToPlot = (data, zoomState) => {
   const casesDataToPlot = [];
   const metaData = {
-    caption: 'United State',
+    caption: 'United States',
     references: {
       rollingAverageTrendStart: {},
       rollingAverageTrendDuration: {},
