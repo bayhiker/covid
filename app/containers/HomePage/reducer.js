@@ -27,6 +27,7 @@ export const initialState = getDialogInitialState({
   colorMapPerCapita: false,
   colorMapNewCases: false,
   currentPlotTab: 0,
+  raceChart: { restart: true, raceBy: 'deaths' },
   currentDate: false,
   zoomState: {
     zoom: 1,
@@ -59,6 +60,15 @@ function updateUserState(draft, userState) {
   }
   if ('currentDate' in userState) {
     draft.userData.currentDate = userState.currentDate;
+  }
+  if ('raceChart' in userState) {
+    const { raceChart } = userState;
+    if ('restart' in raceChart) {
+      draft.userData.raceChart.restart = raceChart.restart;
+    }
+    if ('raceBy' in raceChart) {
+      draft.userData.raceChart.raceBy = raceChart.raceBy;
+    }
   }
   if ('zoomState' in userState) {
     const { zoomState } = userState;
@@ -114,6 +124,7 @@ const homePageReducer = (state = initialState, action) =>
         break;
       case UPDATE_USER_STATE:
         updateUserState(draft, action.userState);
+        // console.log(`user state updated to ${JSON.stringify(draft)}`);
         break;
     }
   });

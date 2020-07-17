@@ -36,3 +36,24 @@ export function getDaysApart(startDateTitle, endDateTitle) {
     Math.abs(endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
   );
 }
+
+// handler takes exactly one arg d of date type
+export function loopThroughDates(startDate, endDate, handler) {
+  if (startDate < endDate) {
+    for (
+      let d = new Date(startDate.getTime()); // new Date So we don't unintentionaly change startDate
+      d <= endDate;
+      d.setDate(d.getDate() + 1)
+    ) {
+      handler(d);
+    }
+  } else {
+    for (
+      let d = new Date(startDate.getTime()); // new Date So we don't unintentionaly change startDate
+      d >= endDate;
+      d.setDate(d.getDate() - 1)
+    ) {
+      handler(d);
+    }
+  }
+}

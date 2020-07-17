@@ -183,6 +183,7 @@ export function HomePage({
   const covidPlotProps = {
     data,
     covidState,
+    onUpdateUserState,
     onChangeCurrentPlotTab,
   };
 

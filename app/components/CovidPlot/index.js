@@ -1,6 +1,18 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Typography, Tabs, Tab, Box, makeStyles } from '@material-ui/core';
+import {
+  Typography,
+  Tabs,
+  Tab,
+  Box,
+  makeStyles,
+  FormControl,
+  InputLabel,
+  NativeSelect,
+  IconButton,
+  Grid,
+} from '@material-ui/core';
+import RefreshIcon from '@material-ui/icons/Refresh';
 import {
   LineChart,
   Line,
@@ -12,6 +24,7 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from 'recharts';
+import BarChart from 'chart-race-react';
 import { CenteredSection } from '../../utils/styledUtil';
 import {
   getNewCasesDataKey,
@@ -19,6 +32,7 @@ import {
   getRollingAverageDataKey,
   rollingDaysRadius,
   extractDataToPlot,
+  extractRaceData,
 } from './data';
 
 const useStyles = makeStyles(theme => ({
@@ -26,6 +40,10 @@ const useStyles = makeStyles(theme => ({
     flexGrow: 1,
     width: '100%',
     backgroundColor: theme.palette.background.paper,
+  },
+  formControl: {
+    margin: theme.spacing(1),
+    minWidth: 120,
   },
 }));
 
@@ -420,6 +438,133 @@ const getTestingCharts = (metaData, casesDataToPlot) => (
   </div>
 );
 
+const getRaceChart = (
+  metaData,
+  data,
+  covidState,
+  onUpdateUserState,
+  classes,
+) => {
+  const { len, timeline, colors, raceData } = extractRaceData(data, covidState);
+  if (!len) {
+    return <div />;
+  }
+  if (covidState.raceChart.restart) {
+    onUpdateUserState({ raceChart: { restart: false } });
+    return <div />;
+  }
+  const labels = Object.keys(raceData).reduce(
+    (res, item) => ({
+      ...res,
+      ...{
+        [item]: (
+          <div
+            style={{
+              textAlign: 'right',
+              marginTop: '-3px',
+              fontSize: '12px',
+            }}
+          >
+            <div>{item}</div>
+          </div>
+        ),
+      },
+    }),
+    {},
+  );
+
+  return (
+    <div>
+      <CenteredSection>
+        <Grid item xs={12}>
+          <Grid container justify="center">
+            <Grid item>
+              <Typography variant="h5">
+                {' '}
+                {metaData.caption} - Race Chart{' '}
+              </Typography>
+            </Grid>
+            <Grid item>
+              <IconButton
+                color="promary"
+                aria-label="Restart"
+                onClick={() => {
+                  onUpdateUserState({ raceChart: { restart: true } });
+                }}
+              >
+                <RefreshIcon />
+              </IconButton>
+            </Grid>
+          </Grid>
+        </Grid>
+        <FormControl className={classes.formControl}>
+          <InputLabel htmlFor="raceBy">Race By</InputLabel>
+          <NativeSelect
+            defaultValue={covidState.raceChart.raceBy}
+            inputProps={{
+              name: 'raceBy',
+              id: 'raceBy',
+            }}
+            onChange={event => {
+              onUpdateUserState({
+                raceChart: { restart: true, raceBy: event.target.value },
+              });
+            }}
+          >
+            <option value="confirmed">Confirmed</option>
+            <option value="deaths">Deaths</option>
+            <option value="confirmed-per-capita">Confirmed Per Million</option>
+            <option value="deaths-per-capita">Deaths Per Million</option>
+            <option value="confirmed-new">Confirmed New</option>
+            <option value="deaths-new">Deaths New</option>
+            <option value="confirmed-new-per-capita">
+              Confirmed New Per Million
+            </option>
+            <option value="deaths-new-per-capita">
+              Deaths New Per Million
+            </option>
+            <option value="testing/settled_cases">Testing/Settled Cases</option>
+            <option value="testing/positive_rate">Testing/Positive Rate</option>
+            <option value="mobility">Mobility</option>
+          </NativeSelect>
+        </FormControl>
+        <div style={{ width: '100%' }}>
+          <BarChart
+            start
+            data={raceData}
+            timeline={timeline}
+            labels={labels}
+            colors={colors}
+            len={len}
+            timeout={200}
+            delay={50}
+            timelineStyle={{
+              textAlign: 'center',
+              fontSize: '18px',
+              color: 'rgb(148, 148, 148)',
+              marginBottom: '10px',
+            }}
+            textBoxStyle={{
+              textAlign: 'right',
+              color: 'rgb(133, 131, 131)',
+              fontSize: '12px',
+              marginBottom: '10px',
+            }}
+            barStyle={{
+              height: '10px',
+              marginTop: '5px',
+              marginBottom: '5px',
+              borderRadius: '2px',
+            }}
+            width={[15, 75, 10]}
+            maxItems={20}
+          />
+        </div>
+      </CenteredSection>
+    </div>
+  );
+};
+
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
 
@@ -450,10 +595,15 @@ function a11yProps(index) {
   };
 }
 
-function CovidPlot({ data, covidState, onChangeCurrentPlotTab }) {
+function CovidPlot({
+  data,
+  covidState,
+  onUpdateUserState,
+  onChangeCurrentPlotTab,
+}) {
   const classes = useStyles();
-
   const shouldDrawTestingTab = covidState.zoomState.zoom < 8;
+  const shouldDrawRaceChart = covidState.zoomState.zoom < 8;
 
   const { metaData, casesDataToPlot } = extractDataToPlot(
     data,
@@ -476,6 +626,7 @@ function CovidPlot({ data, covidState, onChangeCurrentPlotTab }) {
         <Tab label="Doubling" {...a11yProps(2)} />
         <Tab label="Rolling" {...a11yProps(3)} />
         {!shouldDrawTestingTab ? '' : <Tab label="Testing" {...a11yProps(4)} />}
+        {!shouldDrawRaceChart ? '' : <Tab label="Race" {...a11yProps(5)} />}
       </Tabs>
       <TabPanel value={covidState.currentPlotTab} index={0}>
         {getOverviewCharts(metaData, casesDataToPlot)}
@@ -496,6 +647,13 @@ function CovidPlot({ data, covidState, onChangeCurrentPlotTab }) {
           {getTestingCharts(metaData, casesDataToPlot)}
         </TabPanel>
       )}
+      {!shouldDrawRaceChart ? (
+        ''
+      ) : (
+        <TabPanel value={covidState.currentPlotTab} index={5}>
+          {getRaceChart(metaData, data, covidState, onUpdateUserState, classes)}
+        </TabPanel>
+      )}
     </div>
   );
 }
@@ -503,6 +661,7 @@ function CovidPlot({ data, covidState, onChangeCurrentPlotTab }) {
 CovidPlot.propTypes = {
   data: PropTypes.any,
   covidState: PropTypes.any,
+  onUpdateUserState: PropTypes.func,
   onChangeCurrentPlotTab: PropTypes.func,
 };
 

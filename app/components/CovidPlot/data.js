@@ -4,6 +4,8 @@ import {
   dateToShortTitle,
   newDateWithOffset,
   prevDateTitle,
+  loopThroughDates,
+  getDaysApart,
 } from '../../utils/dateUtils';
 import {
   zoomLevelIsCounty,
@@ -125,11 +127,7 @@ export const extractDataToPlot = (data, zoomState) => {
     metaData.references.positiveRateTrendDuration = totalDays - trendStartIndex;
   };
 
-  for (
-    let d = new Date(startDate.getTime()); // new Date So we don't unintentionaly change startDate
-    d <= endDate;
-    d.setDate(d.getDate() + 1)
-  ) {
+  loopThroughDates(startDate, endDate, d => {
     const seriesKey = dateToTitle(d);
     currentTotalCases = {};
     currentTotalCases.confirmed = countyLevel
@@ -183,7 +181,7 @@ export const extractDataToPlot = (data, zoomState) => {
     prevTotalConfirmed = currentTotalCases.confirmed;
     prevTotalDeaths = currentTotalCases.deaths;
     prevMobility = mobility;
-  }
+  });
   // Calculate rolling averages for new cases
   calculateRollingAverage('confirmed');
   calculateRollingAverage('deaths');
@@ -193,5 +191,107 @@ export const extractDataToPlot = (data, zoomState) => {
   return {
     metaData,
     casesDataToPlot,
+  };
+};
+
+const getRaceDataSlice = (data, raceBy) => {
+  const { names, population, mobility, testing, confirmed, deaths } = data;
+  if (raceBy === 'mobility') return mobility;
+  if (raceBy === 'testing/settled_cases') return testing.settled_cases;
+  if (raceBy === 'testing/positive_rate') return testing.positive_rate;
+  if (raceBy === 'confirmed') return confirmed;
+  if (raceBy === 'deaths') return deaths;
+  let dataSlice = null;
+  // Now raceBy can only be (confirmed|deaths){-new}{-per-capita}
+  if (raceBy.startsWith('confirmed')) {
+    dataSlice = confirmed;
+  } else if (raceBy.startsWith('deaths')) {
+    dataSlice = deaths;
+  } else {
+    // Catch call scenario
+    return confirmed;
+  }
+  // We'll be changing data content, make a deep copy to avoid unintentional consequences
+  dataSlice = JSON.parse(JSON.stringify(dataSlice));
+  if (raceBy.includes('-new')) {
+    const startDate = titleToDate(data.most_recent_date);
+    const endDate = newDateWithOffset(titleToDate(data.least_recent_date), 1);
+    Object.keys(names).forEach(fips => {
+      loopThroughDates(startDate, endDate, d => {
+        dataSlice[dateToTitle(d)][fips] =
+          dataSlice[dateToTitle(d)][fips] -
+          dataSlice[dateToTitle(newDateWithOffset(d, -1))][fips];
+      });
+    });
+  }
+  if (raceBy.includes('-per-capita')) {
+    const startDate = titleToDate(data.least_recent_date);
+    const endDate = titleToDate(data.most_recent_date);
+    Object.keys(names).forEach(fips => {
+      loopThroughDates(startDate, endDate, d => {
+        let perCapitaValue = 0;
+        if (fips in population && population[fips] > 0) {
+          perCapitaValue =
+            Math.floor(
+              (100 * (dataSlice[dateToTitle(d)][fips] * 1000000)) /
+                population[fips],
+            ) / 100;
+        }
+        dataSlice[dateToTitle(d)][fips] = perCapitaValue;
+      });
+    });
+  }
+  return dataSlice === null ? confirmed : dataSlice;
+};
+
+export const extractRaceData = (data, covidState) => {
+  if (!('names' in data)) {
+    return {};
+  }
+  const { names } = data;
+  const fipsList = Object.keys(names);
+  const dataSlice = getRaceDataSlice(data, covidState.raceChart.raceBy);
+
+  // Assemble raceData
+  const raceData = {};
+  const startDate = titleToDate(data.least_recent_date);
+  const endDate = titleToDate(data.most_recent_date);
+  const lastKnownValues = {};
+  loopThroughDates(startDate, endDate, d => {
+    const dateTitle = dateToTitle(d);
+    const currentDateValues =
+      dateTitle in dataSlice ? dataSlice[dateTitle] : {};
+    fipsList.forEach((fips, i) => {
+      const name = names[fips];
+      if (!(name in raceData)) raceData[name] = [];
+      let value = 0;
+      if (fips in currentDateValues) {
+        value = currentDateValues[fips];
+      } else if (fips in lastKnownValues) {
+        value = lastKnownValues[fips];
+      }
+      raceData[name].push(value);
+    });
+  });
+  const keys = Object.keys(raceData);
+  const len = raceData[keys[0]].length;
+  const colors = keys.reduce(
+    (res, item) => ({
+      ...res,
+      ...{ [item]: '#888' },
+    }),
+    {},
+  );
+
+  const timeline = [];
+  loopThroughDates(startDate, endDate, d => {
+    timeline.push(dateToShortTitle(d));
+  });
+
+  return {
+    len,
+    timeline,
+    colors,
+    raceData,
   };
 };
