@@ -497,6 +497,10 @@ const getRaceChart = (
             </Grid>
           </Grid>
         </Grid>
+        <Typography variant="subtitle2" color="textSecondary">
+          Blue, green, or red bar colors stand for demacratic, republican, or
+          battle-ground states/counties.
+        </Typography>
         <FormControl className={classes.formControl}>
           <InputLabel htmlFor="raceBy">Race By</InputLabel>
           <NativeSelect
