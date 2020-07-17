@@ -248,8 +248,12 @@ export const extractRaceData = (data, covidState) => {
   if (!('names' in data)) {
     return {};
   }
-  const { names } = data;
+  const { names, votes2016 } = data;
   const fipsList = Object.keys(names);
+  const nameToFips = {};
+  Object.keys(names).forEach(fips => {
+    nameToFips[names[fips]] = fips;
+  });
   const dataSlice = getRaceDataSlice(data, covidState.raceChart.raceBy);
 
   // Assemble raceData
@@ -275,13 +279,36 @@ export const extractRaceData = (data, covidState) => {
   });
   const keys = Object.keys(raceData);
   const len = raceData[keys[0]].length;
-  const colors = keys.reduce(
-    (res, item) => ({
+  const bgThreshold = 1.1;
+  const maxLiberalFactor = 2;
+  const colors = keys.reduce((res, item) => {
+    let color = '#00ff00'; // battle ground state/county
+    const fips = nameToFips[item];
+    if (fips in votes2016) {
+      const { t, c } = votes2016[nameToFips[item]];
+      let liberalFactor = c / t;
+      if (liberalFactor < 1 / maxLiberalFactor)
+        liberalFactor = 1 / maxLiberalFactor;
+      if (liberalFactor > maxLiberalFactor) liberalFactor = maxLiberalFactor;
+      if (liberalFactor > bgThreshold) {
+        const lighter = Math.floor(
+          ((maxLiberalFactor - liberalFactor) * 221) /
+            (maxLiberalFactor - bgThreshold),
+        ).toString(16);
+        color = `#${lighter}${lighter}FF`;
+      } else if (liberalFactor < 1 / bgThreshold) {
+        const lighter = Math.floor(
+          ((maxLiberalFactor - 1 / liberalFactor) * 221) /
+            (maxLiberalFactor - bgThreshold),
+        ).toString(16);
+        color = `#FF${lighter}${lighter}`;
+      }
+    }
+    return {
       ...res,
-      ...{ [item]: '#888' },
-    }),
-    {},
-  );
+      ...{ [item]: color },
+    };
+  }, {});
 
   const timeline = [];
   loopThroughDates(startDate, endDate, d => {
