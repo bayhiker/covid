@@ -498,7 +498,7 @@ const getRaceChart = (
           </Grid>
         </Grid>
         <Typography variant="subtitle2" color="textSecondary">
-          Blue, green, or red bar colors stand for demacratic, republican, or
+          Blue, red, or green bar colors stand for democratic, republican, or
           battle-ground states/counties.
         </Typography>
         <FormControl className={classes.formControl}>

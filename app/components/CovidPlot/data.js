@@ -12,6 +12,7 @@ import {
   zoomLevelIsState,
   usStates,
 } from '../../utils/mapUtils';
+import { reduce } from 'lodash';
 
 export const rollingDaysRadius = 3; // Makes rolling window 7 days
 export const getNewCasesDataKey = caseType => `new ${caseType}`;
@@ -255,16 +256,26 @@ export const extractRaceData = (data, covidState) => {
     nameToFips[names[fips]] = fips;
   });
   const dataSlice = getRaceDataSlice(data, covidState.raceChart.raceBy);
-
   // Assemble raceData
   const raceData = {};
   const startDate = titleToDate(data.least_recent_date);
   const endDate = titleToDate(data.most_recent_date);
   const lastKnownValues = {};
+  const timeline = [];
+  let len = 0;
   loopThroughDates(startDate, endDate, d => {
     const dateTitle = dateToTitle(d);
     const currentDateValues =
       dateTitle in dataSlice ? dataSlice[dateTitle] : {};
+    const allZeroes = Object.keys(currentDateValues).reduce(
+      (result, fips) => result && currentDateValues[fips] === 0,
+      true,
+    );
+    if (allZeroes) {
+      return;
+    }
+    len += 1;
+    timeline.push(dateTitle);
     fipsList.forEach((fips, i) => {
       const name = names[fips];
       if (!(name in raceData)) raceData[name] = [];
@@ -278,8 +289,7 @@ export const extractRaceData = (data, covidState) => {
     });
   });
   const keys = Object.keys(raceData);
-  const len = raceData[keys[0]].length;
-  const bgThreshold = 1.1;
+  const threshold = 1.1;
   const maxLiberalFactor = 2;
   const colors = keys.reduce((res, item) => {
     let color = '#00ff00'; // battle ground state/county
@@ -290,16 +300,16 @@ export const extractRaceData = (data, covidState) => {
       if (liberalFactor < 1 / maxLiberalFactor)
         liberalFactor = 1 / maxLiberalFactor;
       if (liberalFactor > maxLiberalFactor) liberalFactor = maxLiberalFactor;
-      if (liberalFactor > bgThreshold) {
+      if (liberalFactor > threshold) {
         const lighter = Math.floor(
           ((maxLiberalFactor - liberalFactor) * 221) /
-            (maxLiberalFactor - bgThreshold),
+            (maxLiberalFactor - threshold),
         ).toString(16);
         color = `#${lighter}${lighter}FF`;
-      } else if (liberalFactor < 1 / bgThreshold) {
+      } else if (liberalFactor < 1 / threshold) {
         const lighter = Math.floor(
           ((maxLiberalFactor - 1 / liberalFactor) * 221) /
-            (maxLiberalFactor - bgThreshold),
+            (maxLiberalFactor - threshold),
         ).toString(16);
         color = `#FF${lighter}${lighter}`;
       }
@@ -309,11 +319,6 @@ export const extractRaceData = (data, covidState) => {
       ...{ [item]: color },
     };
   }, {});
-
-  const timeline = [];
-  loopThroughDates(startDate, endDate, d => {
-    timeline.push(dateToShortTitle(d));
-  });
 
   return {
     len,
