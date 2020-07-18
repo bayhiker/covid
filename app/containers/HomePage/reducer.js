@@ -76,6 +76,14 @@ function updateUserState(draft, userState) {
       draft.userData.zoomState.center = zoomState.center;
     }
     if ('zoom' in zoomState) {
+      const oldZoom = draft.userData.zoomState.zoom;
+      if (
+        (oldZoom < 2 && zoomState.zoom >= 2) ||
+        (oldZoom >= 2 && zoomState.zoom < 2)
+      ) {
+        // Redraw race chart if zoom changes between state and county levels
+        draft.userData.raceChart.restart = true;
+      }
       draft.userData.zoomState.zoom = zoomState.zoom;
       draft.userData.zoomState.geoJsonUrl =
         zoomState.zoom >= 2 ? GEO_JSON_URL_COUNTIES : GEO_JSON_URL_STATES;
