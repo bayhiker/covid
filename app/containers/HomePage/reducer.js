@@ -102,10 +102,10 @@ function updateUserState(draft, userState) {
     }
     draft.userData.zoomState.dataUrl = dataUrl;
   }
-  // If at county level, there's no testing tab
+  // If at county level, there's no testing tab or race chart tab
   if (
     draft.userData.zoomState.zoom >= 8 &&
-    draft.userData.currentPlotTab === 4
+    (draft.userData.currentPlotTab === 4 || draft.userData.currentPlotTab === 5)
   ) {
     draft.userData.currentPlotTab = 3;
   }
