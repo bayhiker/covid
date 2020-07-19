@@ -486,7 +486,7 @@ const getRaceChart = (
             </Grid>
             <Grid item>
               <IconButton
-                color="promary"
+                color="primary"
                 aria-label="Restart"
                 onClick={() => {
                   onUpdateUserState({ raceChart: { restart: true } });

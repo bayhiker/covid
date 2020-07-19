@@ -1,6 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { makeStyles, Typography, TextField } from '@material-ui/core';
+import { makeStyles, TextField, IconButton, Snackbar } from '@material-ui/core';
+import FileCopySharpIcon from '@material-ui/icons/FileCopySharp';
+import { Alert, AlertTitle } from '@material-ui/lab';
+import { CopyToClipboard } from 'react-copy-to-clipboard';
 import {
   EmailShareButton,
   EmailIcon,
@@ -39,19 +42,31 @@ function CovidShare({ children, covidState }) {
     covidState,
   )}`;
   const title = 'COVID-19';
+  const [statusBarOpen, setStatusBarOpen] = React.useState(false);
+  const handleCloseStatusBar = (e, reason) => {
+    setStatusBarOpen(false);
+  };
 
   const popoverContent = (
     <div className={classes.shareContainer}>
       <div>
         <TextField
-          disabled
           id="share-url-text-field"
-          label="URL"
           defaultValue={shareUrl}
           InputProps={{
             readOnly: true,
           }}
         />
+        <CopyToClipboard
+          text={shareUrl}
+          onCopy={() => {
+            setStatusBarOpen(true);
+          }}
+        >
+          <IconButton>
+            <FileCopySharpIcon />
+          </IconButton>
+        </CopyToClipboard>
       </div>
       <div className={classes.shareNetwork}>
         <EmailShareButton
@@ -104,6 +119,16 @@ function CovidShare({ children, covidState }) {
           <LinkedinIcon size={32} round />
         </LinkedinShareButton>
       </div>
+      <Snackbar
+        open={statusBarOpen}
+        autoHideDuration={3000}
+        onClose={handleCloseStatusBar}
+      >
+        <Alert severity="success">
+          <AlertTitle>Success</AlertTitle>
+          URL successfully copied to clipboard.
+        </Alert>
+      </Snackbar>
     </div>
   );
   const youQuizPopoverProps = {
