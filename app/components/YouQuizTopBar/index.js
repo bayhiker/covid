@@ -131,7 +131,7 @@ function YouQuizTopBar(props) {
           </div>
           <div>
             <Link
-              href="https://youquiz.me/community/category/6/covid19"
+              href="https://youquiz.me/community/category/9/covid"
               target="_blank"
               rel="noreferrer"
             >

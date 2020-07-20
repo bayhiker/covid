@@ -209,15 +209,8 @@ const getDoublingCharts = (metaData, casesDataToPlot) => (
       </Typography>
       <Typography variant="subtitle2" color="textSecondary">
         Cases doubled since x days ago. COVID-19 patient are on average
-        hospitalized for{' '}
-        <a
-          target="_"
-          href="https://youquiz.me/community/topic/8/how-long-do-covid-patients-stay-in-the-hospital"
-        >
-          8 days
-        </a>
-        , therefore when doubling days falls below 8 days, total hospitalization
-        will fall.
+        hospitalized for 8 days, therefore when doubling days falls below 8
+        days, total hospitalization will fall.
       </Typography>
       <ResponsiveContainer
         width="100%"
