@@ -46,7 +46,7 @@ export function updateCovidState(covidState, urlSearchString) {
       let raceBy = '';
       if (p.includes('i')) raceBy = 'mobility';
       else if (p.includes('s')) raceBy = 'testing/settled_cases';
-      else if (p.includes('p')) raceBy = 'testing/positive_rate';
+      else if (p.includes('r')) raceBy = 'testing/positive_rate';
       else {
         if (p.includes('m')) raceBy += 'confirmed';
         if (p.includes('d')) raceBy += 'deaths';
@@ -72,7 +72,7 @@ export function getSearchString(covidState) {
     const { raceBy } = covidState.raceChart;
     if (raceBy === 'mobility') compressedRaceBy = 'i';
     else if (raceBy === 'testing/settled_cases') compressedRaceBy = 's';
-    else if (raceBy === 'testing/positive_rate') compressedRaceBy = 'p';
+    else if (raceBy === 'testing/positive_rate') compressedRaceBy = 'r';
     else {
       if (raceBy.includes('confirmed')) compressedRaceBy += 'c';
       if (raceBy.includes('deaths')) compressedRaceBy += 'd';
