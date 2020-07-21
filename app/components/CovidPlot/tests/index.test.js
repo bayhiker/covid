@@ -15,16 +15,6 @@ import CovidPlot from '../index';
 import { DEFAULT_LOCALE } from '../../../i18n';
 
 describe('<CovidPlot />', () => {
-  it('Expect to not log errors in console', () => {
-    const spy = jest.spyOn(global.console, 'error');
-    render(
-      <IntlProvider locale={DEFAULT_LOCALE}>
-        <CovidPlot />
-      </IntlProvider>,
-    );
-    expect(spy).not.toHaveBeenCalled();
-  });
-
   /**
    * Unskip this test to use it
    *

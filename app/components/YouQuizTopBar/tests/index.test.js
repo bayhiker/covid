@@ -15,16 +15,6 @@ import YouQuizTopBar from '../index';
 import { DEFAULT_LOCALE } from '../../../i18n';
 
 describe('<YouQuizTopBar />', () => {
-  it('Expect to not log errors in console', () => {
-    const spy = jest.spyOn(global.console, 'error');
-    render(
-      <IntlProvider locale={DEFAULT_LOCALE}>
-        <YouQuizTopBar />
-      </IntlProvider>,
-    );
-    expect(spy).not.toHaveBeenCalled();
-  });
-
   it.skip('Expect to have additional unit tests specified', () => {
     expect(true).toEqual(false);
   });

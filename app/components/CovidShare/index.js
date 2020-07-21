@@ -23,7 +23,7 @@ import {
 import YouQuizPopover from '../YouQuizPopover';
 import { getSearchString } from '../../utils/searchParams';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles(() => ({
   shareNetwork: {
     verticalAlign: 'top',
     display: 'inline - block',
@@ -43,7 +43,7 @@ function CovidShare({ children, covidState }) {
   )}`;
   const title = 'COVID-19';
   const [statusBarOpen, setStatusBarOpen] = React.useState(false);
-  const handleCloseStatusBar = (e, reason) => {
+  const handleCloseStatusBar = () => {
     setStatusBarOpen(false);
   };
 

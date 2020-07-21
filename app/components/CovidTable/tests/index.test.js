@@ -15,20 +15,6 @@ import CovidTable from '../index';
 import { DEFAULT_LOCALE } from '../../../i18n';
 
 describe('<CovidTable />', () => {
-  it('Expect to not log errors in console', () => {
-    const spy = jest.spyOn(global.console, 'error');
-    render(
-      <IntlProvider locale={DEFAULT_LOCALE}>
-        <CovidTable />
-      </IntlProvider>,
-    );
-    expect(spy).not.toHaveBeenCalled();
-  });
-
-  it('Expect to have additional unit tests specified', () => {
-    expect(true).toEqual(false);
-  });
-
   /**
    * Unskip this test to use it
    *

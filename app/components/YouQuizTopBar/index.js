@@ -91,7 +91,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 function YouQuizTopBar(props) {
-  const { data, covidState, onChangeSearchWith } = props;
+  const { data, covidState } = props;
   const classes = useStyles();
 
   const covidShareProps = {

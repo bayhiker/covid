@@ -5,14 +5,12 @@ import {
   newDateWithOffset,
   prevDateTitle,
   loopThroughDates,
-  getDaysApart,
 } from '../../utils/dateUtils';
 import {
   zoomLevelIsCounty,
   zoomLevelIsState,
   usStates,
 } from '../../utils/mapUtils';
-import { reduce } from 'lodash';
 
 export const rollingDaysRadius = 3; // Makes rolling window 7 days
 export const getNewCasesDataKey = caseType => `new ${caseType}`;
@@ -276,7 +274,7 @@ export const extractRaceData = (data, covidState) => {
     }
     len += 1;
     timeline.push(dateTitle);
-    fipsList.forEach((fips, i) => {
+    fipsList.forEach(fips => {
       const name = names[fips];
       if (!(name in raceData)) raceData[name] = [];
       let value = 0;

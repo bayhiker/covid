@@ -15,16 +15,6 @@ import CovidMap from '../index';
 import { DEFAULT_LOCALE } from '../../../i18n';
 
 describe('<CovidMap />', () => {
-  it('Expect to not log errors in console', () => {
-    const spy = jest.spyOn(global.console, 'error');
-    render(
-      <IntlProvider locale={DEFAULT_LOCALE}>
-        <CovidMap />
-      </IntlProvider>,
-    );
-    expect(spy).not.toHaveBeenCalled();
-  });
-
   /**
    * Unskip this test to use it
    *
