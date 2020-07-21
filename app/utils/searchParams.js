@@ -41,7 +41,20 @@ export function updateCovidState(covidState, urlSearchString) {
     }
   }
   if (p) {
-    covidState.currentPlotTab = parseInt(p, 10);
+    covidState.currentPlotTab = parseInt(p.match(/^\d+/).shift(), 10);
+    if (covidState.currentPlotTab === 5) {
+      let raceBy = '';
+      if (p.includes('i')) raceBy = 'mobility';
+      else if (p.includes('s')) raceBy = 'testing/settled_cases';
+      else if (p.includes('p')) raceBy = 'testing/positive_rate';
+      else {
+        if (p.includes('m')) raceBy += 'confirmed';
+        if (p.includes('d')) raceBy += 'deaths';
+        if (p.includes('n')) raceBy += '-new';
+        if (p.includes('p')) raceBy += '-per-capita';
+      }
+      covidState.raceChart = { raceBy };
+    }
   }
 }
 
@@ -52,8 +65,22 @@ export function getSearchString(covidState) {
   const map = `${covidState.colorMapBy === 'confirmed' ? 'c' : 'd'}${
     covidState.colorMapNewCases ? 'n' : ''
   }${covidState.colorMapPerCapita ? 'p' : ''}${geoId}`;
-  const plot = `${covidState.currentPlotTab}`;
   urlSearchParams.append('m', map);
+  let plot = `${covidState.currentPlotTab}`;
+  if (plot === '5') {
+    let compressedRaceBy = '';
+    const { raceBy } = covidState.raceChart;
+    if (raceBy === 'mobility') compressedRaceBy = 'i';
+    else if (raceBy === 'testing/settled_cases') compressedRaceBy = 's';
+    else if (raceBy === 'testing/positive_rate') compressedRaceBy = 'p';
+    else {
+      if (raceBy.includes('confirmed')) compressedRaceBy += 'c';
+      if (raceBy.includes('deaths')) compressedRaceBy += 'd';
+      if (raceBy.includes('-new')) compressedRaceBy += 'n';
+      if (raceBy.includes('-per-capita')) compressedRaceBy += 'p';
+    }
+    plot += compressedRaceBy;
+  }
   urlSearchParams.append('p', plot);
   return urlSearchParams.toString();
 }
