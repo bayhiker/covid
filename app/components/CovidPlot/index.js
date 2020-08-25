@@ -163,16 +163,10 @@ const getNewCasesCharts = (metaData, casesDataToPlot) => (
             stroke="#0F0"
           />
           <Line
-            yAxisId="right"
+            yAxisId="left"
             type="monotone"
             dataKey="new deaths"
             stroke="#F00"
-          />
-          <Line
-            yAxisId="left"
-            type="monotone"
-            dataKey="mobility"
-            stroke="#BBB"
           />
           <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
           <XAxis dataKey="name" />
@@ -180,7 +174,7 @@ const getNewCasesCharts = (metaData, casesDataToPlot) => (
             yAxisId="left"
             orientation="left"
             label={{
-              value: 'Mobility Index',
+              value: 'Deaths',
               position: 'insideBottomLeft',
             }}
           />
@@ -189,7 +183,7 @@ const getNewCasesCharts = (metaData, casesDataToPlot) => (
             orientation="right"
             tickFormatter={formatNumericTick}
             label={{
-              value: 'Cases',
+              value: 'Confirmed',
               position: 'insideBottomRight',
             }}
           />
@@ -295,16 +289,10 @@ const getRollingCharts = (metaData, casesDataToPlot) => (
             stroke="#00F"
           />
           <Line
-            yAxisId="right"
+            yAxisId="left"
             type="monotone"
             dataKey={getRollingAverageDataKey('deaths')}
             stroke="#F00"
-          />
-          <Line
-            yAxisId="left"
-            type="monotone"
-            dataKey="mobility"
-            stroke="#BBB"
           />
           <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
           <XAxis dataKey="name" />
@@ -313,7 +301,7 @@ const getRollingCharts = (metaData, casesDataToPlot) => (
             orientation="right"
             tickFormatter={formatNumericTick}
             label={{
-              value: 'Cases',
+              value: 'Confirmed',
               position: 'insideBottomRight',
             }}
             allowDecimals
@@ -322,7 +310,7 @@ const getRollingCharts = (metaData, casesDataToPlot) => (
             yAxisId="left"
             orientation="left"
             label={{
-              value: 'Mobility Index',
+              value: 'Death',
               position: 'insideBottomLeft',
             }}
           />

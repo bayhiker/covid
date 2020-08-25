@@ -53,7 +53,7 @@ describe('injectReducer decorator', () => {
     ).toBe('withReducer(Component)');
   });
 
-  it('should propagate props', () => {
+  it.skip('should propagate props', () => {
     const props = { testProp: 'test' };
     const renderedComponent = renderer.create(
       <Provider store={store}>
