@@ -3,7 +3,7 @@
  */
 
 const prod = {
-  DATA_URL_PREFIX: 'https://youquiz.me/data/covid/us',
+  DATA_URL_PREFIX: 'https://rule55.com/data/covid/us',
 };
 
 const dev = {

@@ -1,10 +1,10 @@
 {
-  "name": "youquiz-web",
+  "name": "rule55-covid",
   "version": "4.0.0",
   "description": "COVID",
   "repository": {
     "type": "git",
-    "url": "git://github.com/bayhiker/youquiz.git"
+    "url": "git://github.com/bayhiker/covid.git"
   },
   "engines": {
     "npm": ">=5",
