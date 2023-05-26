@@ -139,7 +139,7 @@ export const extractDataToPlot = (data, zoomState) => {
       ? data.mobility[seriesKey][geoId]
       : timeSeriesMobility[seriesKey];
     currentDataPoint = {
-      name: dateToShortTitle(d),
+      name: dateToTitle(d),
       confirmed: currentTotalCases.confirmed,
       deaths: currentTotalCases.deaths,
     };
