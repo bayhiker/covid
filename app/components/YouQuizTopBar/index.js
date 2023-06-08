@@ -130,17 +130,6 @@ function YouQuizTopBar(props) {
             </CovidTable>
           </div>
           <div>
-            <Link
-              href="https://youquiz.me/community/category/9/covid"
-              target="_blank"
-              rel="noreferrer"
-            >
-              <IconButton>
-                <ForumIcon />
-              </IconButton>
-            </Link>
-          </div>
-          <div>
             <CovidThanks>
               <Tooltip title="Thanks">
                 <IconButton color="secondary">
